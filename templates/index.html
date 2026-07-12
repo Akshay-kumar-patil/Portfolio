@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Akshay Kumar Patil | Ghibli Portfolio</title>
+  <meta name="description" content="A Ghibli-inspired responsive portfolio for Akshay Kumar Patil." />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="opening-screen" id="opening-screen" aria-hidden="true">
+    <div class="opening-scene">
+      <div class="sky-glow"></div>
+      <div class="sun"></div>
+      <div class="cloud cloud-one"></div>
+      <div class="cloud cloud-two"></div>
+      <div class="mist mist-one"></div>
+      <div class="mist mist-two"></div>
+      <div class="mountain mountain-back"></div>
+      <div class="mountain mountain-front"></div>
+      <div class="forest">
+        <span class="tree tree-a"></span>
+        <span class="tree tree-b"></span>
+        <span class="tree tree-c"></span>
+        <span class="tree tree-d"></span>
+      </div>
+      <div class="house">
+        <div class="roof"></div>
+        <div class="walls"></div>
+        <div class="window"></div>
+        <div class="door"></div>
+      </div>
+      <div class="river"></div>
+      <div class="waterfall"></div>
+      <div class="ripples"></div>
+      <div class="opening-copy">
+        <p class="eyebrow">Welcome to the valley</p>
+        <h1>Akshay Kumar Patil</h1>
+        <p>AI / ML Student, built as a storybook scene with a forest, cottage, and waterfall.</p>
+        <button class="enter-button" id="enter-button" type="button">Enter the portfolio</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="portfolio-shell">
+    <header class="hero" id="hero">
+      <div class="hero-text reveal">
+        <p class="eyebrow">A softly animated portfolio</p>
+        <h2 id="headline"></h2>
+        <p class="hero-summary" id="summary"></p>
+        <div class="hero-actions">
+          <a class="button primary" id="github-link" href="#" target="_blank" rel="noreferrer">GitHub</a>
+          <a class="button secondary" id="linkedin-link" href="#" target="_blank" rel="noreferrer">LinkedIn</a>
+          <a class="button secondary" id="resume-link" href="#" target="_blank" rel="noreferrer">Resume PDF</a>
+        </div>
+      </div>
+      <aside class="hero-card glass reveal">
+        <p class="card-label">Profile</p>
+        <h3 id="role"></h3>
+        <dl class="hero-meta">
+          <div>
+            <dt>Location</dt>
+            <dd id="location"></dd>
+          </div>
+          <div>
+            <dt>Education</dt>
+            <dd id="education-tag"></dd>
+          </div>
+          <div>
+            <dt>Contact</dt>
+            <dd id="email"></dd>
+          </div>
+        </dl>
+      </aside>
+    </header>
+
+    <section class="section glass reveal">
+      <div class="section-heading">
+        <p class="eyebrow">Education</p>
+        <h3>Learning paths framed like illustrated panels</h3>
+      </div>
+      <div class="cards grid-3" id="education-grid"></div>
+    </section>
+
+    <section class="section glass reveal">
+      <div class="section-heading">
+        <p class="eyebrow">Projects</p>
+        <h3>Practical AI work and playful systems</h3>
+      </div>
+      <div class="cards grid-2" id="projects-grid"></div>
+    </section>
+
+    <section class="section glass reveal">
+      <div class="section-heading">
+        <p class="eyebrow">Technical Skills</p>
+        <h3>The craft behind the scenes</h3>
+      </div>
+      <div class="skills-grid" id="skills-grid"></div>
+    </section>
+
+    <section class="section glass reveal">
+      <div class="section-heading">
+        <p class="eyebrow">Achievements</p>
+        <h3>Wins and certifications</h3>
+      </div>
+      <div class="badge-row" id="achievements-row"></div>
+    </section>
+
+    <footer class="footer glass reveal">
+      <p>Designed from your resume data and styled as a responsive Ghibli-inspired storybook portfolio.</p>
+      <p class="footer-links">
+        <a id="footer-github" href="#" target="_blank" rel="noreferrer">GitHub</a>
+        <span>·</span>
+        <a id="footer-linkedin" href="#" target="_blank" rel="noreferrer">LinkedIn</a>
+        <span>·</span>
+        <a id="footer-resume" href="#" target="_blank" rel="noreferrer">Resume PDF</a>
+      </p>
+    </footer>
+  </main>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
