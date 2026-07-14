@@ -68,7 +68,7 @@ class PortfolioHandler(SimpleHTTPRequestHandler):
 
 
 def main():
-    host = "0.0.0.0"
+    host = "127.0.0.1"
     port = 8000
     server = ThreadingHTTPServer((host, port), PortfolioHandler)
     print(f"Portfolio site running at http://{host}:{port}", flush=True)
