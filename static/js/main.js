@@ -47,11 +47,27 @@ async function boot() {
     <article class="card">
       <h4>${item.name}</h4>
       <p>${item.tagline}</p>
+      <a class="repo-link" href="${item.repo}" target="_blank" rel="noreferrer">View Repo</a>
       <ul class="project-list">
         ${item.details.map((detail) => `<li>${detail}</li>`).join("")}
       </ul>
     </article>
   `).join("");
+
+  const specialProject = document.getElementById("special-project");
+  if (specialProject && data.special_project) {
+    specialProject.innerHTML = `
+      <article class="card special-card">
+        <div class="special-badge">Special Mention</div>
+        <h4>${data.special_project.name}</h4>
+        <p>${data.special_project.subtitle}</p>
+        <a class="repo-link" href="${data.special_project.repo}" target="_blank" rel="noreferrer">View Repo</a>
+        <ul class="project-list">
+          ${data.special_project.details.map((detail) => `<li>${detail}</li>`).join("")}
+        </ul>
+      </article>
+    `;
+  }
 
   const skillsGrid = document.getElementById("skills-grid");
   skillsGrid.innerHTML = Object.entries(data.skills).map(([group, values]) => `
