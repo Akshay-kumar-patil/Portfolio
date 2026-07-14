@@ -10,6 +10,7 @@
   --accent: #f5c46b;
   --accent-2: #8fd3c8;
   --accent-3: #f18c8f;
+  --scene-bg: url("/static/img/opening-ghibli.png");
   --display-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
   --body-font: "Trebuchet MS", "Segoe UI", sans-serif;
 }
@@ -39,7 +40,7 @@ body {
   z-index: -2;
   background:
     linear-gradient(180deg, rgba(255, 248, 227, 0.12), rgba(14, 31, 36, 0.28)),
-    url("/static/img/opening-ghibli.png") center center / cover no-repeat;
+    var(--scene-bg) center center / cover no-repeat;
   transform: scale(1.04);
   filter: saturate(1.02) contrast(1.02);
 }
@@ -98,7 +99,7 @@ a {
 
 .opening-bg {
   inset: 0;
-  background: url("/static/img/opening-ghibli.png") center center / cover no-repeat;
+  background: var(--scene-bg) center center / cover no-repeat;
   transform: scale(1.08);
   animation: sceneDrift 18s ease-in-out infinite alternate;
 }
@@ -473,6 +474,10 @@ a {
 }
 
 @media (max-width: 760px) {
+  body {
+    --scene-bg: url("/static/img/opening-ghibli-mobile.png");
+  }
+
   .portfolio-shell {
     width: min(100vw - 20px, 1160px);
     padding-top: 16px;
