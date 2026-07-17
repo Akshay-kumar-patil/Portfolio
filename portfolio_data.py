@@ -3,6 +3,74 @@ PORTFOLIO = {
     "title": "AI / ML Student",
     "location": "Jabalpur, Madhya Pradesh",
     "education_tag": "Bachelor of Technology, AI & ML",
+    "hero": {
+        "eyebrow": "Hi, I'm Akshay Kumar Patil.",
+        "headline": "AI / ML developer focused on performant RAG applications, ML / DL models, and AI-powered solutions.",
+        "chips": ["India", "B.Tech AI & ML 2023-27", "Open to opportunities"],
+    },
+    "metrics": [
+        {"label": "Projects", "value": "10+"},
+        {"label": "Live Deployments", "value": "6"},
+        {"label": "Tech Stack", "value": "3"},
+        {"label": "Achievements", "value": "10+"},
+    ],
+    "competency": [
+        {"label": "DSA in C++", "value": 75},
+        {"label": "Python", "value": 80},
+        {"label": "C", "value": 50},
+        {"label": "Frontend", "value": 68},
+        {"label": "Backend Python", "value": 82},
+        {"label": "FastAPI / Flask / WS", "value": 78},
+        {"label": "AI / ML / RAG", "value": 84},
+        {"label": "MySQL / MongoDB", "value": 76},
+    ],
+    "domain_mastery": [
+        {
+            "name": "Frontend",
+            "icon": "▣",
+            "items": ["HTML", "CSS", "JavaScript", "Streamlit"],
+        },
+        {
+            "name": "Backend",
+            "icon": "▤",
+            "items": ["Python", "FastAPI", "Flask", "WebSockets"],
+        },
+        {
+            "name": "AI / ML / CV",
+            "icon": "◈",
+            "items": ["PyTorch", "TensorFlow", "Scikit-Learn", "OpenCV"],
+        },
+        {
+            "name": "RAG / LLMs",
+            "icon": "◉",
+            "items": ["LangChain", "RAG", "Gemini", "Groq"],
+        },
+        {
+            "name": "Databases",
+            "icon": "◫",
+            "items": ["MySQL", "MongoDB"],
+        },
+        {
+            "name": "Automation / AI Agents",
+            "icon": "◌",
+            "items": ["n8n", "HuggingFace", "Whisper", "gTTS"],
+        },
+        {
+            "name": "Core / DSA",
+            "icon": "◐",
+            "items": ["C++", "DSA in C++", "C"],
+        },
+        {
+            "name": "Tools",
+            "icon": "◒",
+            "items": ["Git", "GitHub", "VS Code", "Google Colab"],
+        },
+    ],
+    "summary_points": [
+        "AI/ML student with hands-on experience in ML, DL, and LLM-based systems.",
+        "Comfortable building RAG workflows and multimodal automation.",
+        "Focused on practical AI applications with real-world impact.",
+    ],
     "summary": (
         "AI/ML student with hands-on experience in ML, DL, and LLM-based systems. "
         "Comfortable building RAG workflows, multimodal automation, and practical AI applications "
