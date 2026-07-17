@@ -17,7 +17,7 @@
       <div class="opening-copy">
         <p class="eyebrow">Welcome to the valley</p>
         <h1>Akshay Kumar Patil</h1>
-        <p>AI / ML Student, built as a storybook scene with a forest, cottage, and waterfall.</p>
+        <p>AI / ML developer, focused on performant RAG applications, ML / DL models, and AI-powered solutions.</p>
         <button class="enter-button" id="enter-button" type="button">Enter the portfolio</button>
       </div>
     </div>
@@ -25,34 +25,35 @@
 
   <main class="portfolio-shell">
     <header class="hero" id="hero">
-      <div class="hero-text reveal">
-        <p class="eyebrow">A softly animated portfolio</p>
+      <div class="hero-intro glass reveal">
+        <h1 id="hero-name">Hi, I'm Akshay Kumar Patil</h1>
         <h2 id="headline"></h2>
-        <p class="hero-summary" id="summary"></p>
+        <ul class="hero-summary" id="summary-list"></ul>
+        <div class="hero-chips" id="hero-chips"></div>
         <div class="hero-actions">
-          <a class="button primary" id="github-link" href="#" target="_blank" rel="noreferrer">GitHub</a>
-          <a class="button secondary" id="linkedin-link" href="#" target="_blank" rel="noreferrer">LinkedIn</a>
-          <a class="button secondary" id="resume-link" href="#" target="_blank" rel="noreferrer">Resume PDF</a>
+          <button class="button primary" id="view-skills" type="button">View Skills</button>
+          <button class="button secondary" id="contact-me" type="button">Contact Me</button>
+          <button class="button secondary" id="open-resume" type="button">Resume</button>
         </div>
       </div>
-      <aside class="hero-card glass reveal">
-        <p class="card-label">Profile</p>
-        <h3 id="role"></h3>
-        <dl class="hero-meta">
-          <div>
-            <dt>Location</dt>
-            <dd id="location"></dd>
+
+      <div class="hero-panels">
+        <section class="hero-stats glass reveal">
+          <div class="panel-head">
+            <p class="eyebrow">Snapshot</p>
+            <h3>At a glance</h3>
           </div>
-          <div>
-            <dt>Education</dt>
-            <dd id="education-tag"></dd>
+          <div class="metric-grid" id="hero-metrics"></div>
+        </section>
+
+        <section class="hero-analytics glass reveal">
+          <div class="panel-head">
+            <p class="eyebrow">Analytics & Skills</p>
+            <h3>Domain Mastery</h3>
           </div>
-          <div>
-            <dt>Contact</dt>
-            <dd id="email"></dd>
-          </div>
-        </dl>
-      </aside>
+          <div class="domain-mastery" id="domain-mastery"></div>
+        </section>
+      </div>
     </header>
 
     <section class="section glass reveal">
@@ -79,12 +80,33 @@
       <div class="special-project" id="special-project"></div>
     </section>
 
-    <section class="section glass reveal">
+    <section class="section glass reveal" id="skills-anchor">
       <div class="section-heading">
         <p class="eyebrow">Technical Skills</p>
         <h3>The craft behind the scenes</h3>
       </div>
       <div class="skills-grid" id="skills-grid"></div>
+    </section>
+
+    <section class="section glass reveal" id="contact-section">
+      <div class="section-heading">
+        <p class="eyebrow">Contact</p>
+        <h3>Let’s build something useful</h3>
+      </div>
+      <div class="contact-strip">
+        <div>
+          <p class="card-label">India</p>
+          <p>Jabalpur, Madhya Pradesh</p>
+        </div>
+        <div>
+          <p class="card-label">Email</p>
+          <p id="contact-email"></p>
+        </div>
+        <div>
+          <p class="card-label">Resume</p>
+          <button class="button secondary" id="footer-open-resume" type="button">Open Resume</button>
+        </div>
+      </div>
     </section>
 
     <section class="section glass reveal">
@@ -99,13 +121,27 @@
       <p>Designed from your resume data and styled as a responsive Ghibli-inspired storybook portfolio.</p>
       <p class="footer-links">
         <a id="footer-github" href="#" target="_blank" rel="noreferrer">GitHub</a>
-        <span>·</span>
+        <span>&middot;</span>
         <a id="footer-linkedin" href="#" target="_blank" rel="noreferrer">LinkedIn</a>
-        <span>·</span>
+        <span>&middot;</span>
         <a id="footer-resume" href="#" target="_blank" rel="noreferrer">Resume PDF</a>
       </p>
     </footer>
   </main>
+
+  <div class="resume-modal" id="resume-modal" aria-hidden="true">
+    <div class="resume-backdrop" id="resume-backdrop"></div>
+    <section class="resume-card" role="dialog" aria-modal="true" aria-label="Resume preview">
+      <div class="resume-toolbar">
+        <div>
+          <p class="eyebrow">Resume Preview</p>
+          <h3>Akshay Kumar Patil</h3>
+        </div>
+        <button class="button secondary" id="close-resume" type="button">Close</button>
+      </div>
+      <iframe class="resume-frame" src="/static/resume/Akshay_updated_resume_main.pdf" title="Akshay Kumar Patil Resume"></iframe>
+    </section>
+  </div>
 
   <script src="/static/js/main.js"></script>
 </body>
