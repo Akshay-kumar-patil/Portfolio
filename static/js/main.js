@@ -113,6 +113,102 @@ async function boot() {
   const achievementsRow = document.getElementById("achievements-row");
   achievementsRow.innerHTML = data.achievements.map((item) => `<span class="badge">${item}</span>`).join("");
 
+  const windTrail = document.getElementById("wind-trail");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  if (windTrail && !reducedMotion && !coarsePointer) {
+    const rand = (min, max) => min + Math.random() * (max - min);
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+    const trailNodes = [];
+    let lastX = null;
+    let lastY = null;
+    let lastSpawn = 0;
+
+    const prune = () => {
+      while (trailNodes.length > 36) {
+        const node = trailNodes.shift();
+        node?.remove();
+      }
+    };
+
+    const spawn = (className, x, y, styles) => {
+      const node = document.createElement("span");
+      node.className = className;
+      node.style.setProperty("--x", `${x}px`);
+      node.style.setProperty("--y", `${y}px`);
+      Object.entries(styles).forEach(([key, value]) => {
+        node.style.setProperty(key, value);
+      });
+      windTrail.appendChild(node);
+      trailNodes.push(node);
+      node.addEventListener("animationend", () => node.remove(), { once: true });
+      prune();
+    };
+
+    const handleMove = (event) => {
+      const x = event.clientX;
+      const y = event.clientY;
+      if (lastX === null || lastY === null) {
+        lastX = x;
+        lastY = y;
+        return;
+      }
+
+      const dx = x - lastX;
+      const dy = y - lastY;
+      const distance = Math.max(Math.hypot(dx, dy), 0.5);
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      const now = performance.now();
+      const spacing = now - lastSpawn;
+      const flowX = dx / distance;
+      const flowY = dy / distance;
+      const normalX = -flowY;
+      const normalY = flowX;
+      const streakCount = distance > 34 || spacing > 55 ? 2 : 1;
+      const leafCount = distance > 28 ? 1 : 0;
+      const travel = clamp(distance * 0.58 + 16, 18, 82);
+      const duration = clamp(820 + distance * 9, 850, 1450);
+      const leafTravel = clamp(distance * 0.3 + 10, 10, 34);
+      const leafDur = clamp(1000 + distance * 7, 980, 1550);
+
+      for (let i = 0; i < streakCount; i += 1) {
+        const behind = rand(4, 12);
+        spawn("wind-streak", x - flowX * behind + normalX * rand(-4, 4), y - flowY * behind + normalY * rand(-4, 4), {
+          "--len": `${travel + rand(-8, 10)}px`,
+          "--angle": `${angle + rand(-5, 5)}deg`,
+          "--travel": `${travel}px`,
+          "--sway": `${rand(-8, 8)}px`,
+          "--dur": `${duration + rand(-150, 150)}ms`,
+        });
+      }
+
+      for (let i = 0; i < leafCount; i += 1) {
+        spawn("wind-leaf", x - flowX * rand(2, 8) + rand(-6, 6), y - flowY * rand(2, 8) + rand(-6, 6), {
+          "--leaf-size": `${rand(3.5, 6.5)}px`,
+          "--leaf-rot": `${angle + rand(-30, 30)}deg`,
+          "--leaf-dx": `${flowX * leafTravel + normalX * rand(-13, 13)}px`,
+          "--leaf-dy": `${flowY * leafTravel + normalY * rand(-13, 13)}px`,
+          "--dur": `${leafDur + rand(-160, 140)}ms`,
+        });
+      }
+
+      lastX = x;
+      lastY = y;
+      lastSpawn = now;
+    };
+
+    window.addEventListener("pointermove", handleMove, { passive: true });
+    window.addEventListener("pointerdown", handleMove, { passive: true });
+    window.addEventListener("pointerleave", () => {
+      lastX = null;
+      lastY = null;
+    });
+    window.addEventListener("blur", () => {
+      lastX = null;
+      lastY = null;
+    });
+  }
+
   const openingScreen = document.getElementById("opening-screen");
   const enterButton = document.getElementById("enter-button");
   const dismissOpening = () => {
