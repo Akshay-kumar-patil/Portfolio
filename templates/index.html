@@ -10,6 +10,17 @@
 <body style="--scene-bg: url('{{SCENE_BG_URL}}');">
   <div class="site-bg" aria-hidden="true"></div>
   <div class="wind-trail" id="wind-trail" aria-hidden="true"></div>
+  <div class="storm-layer" id="storm-layer" aria-hidden="true">
+    <div class="storm-vortex" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="storm-alert" role="alertdialog" aria-modal="true" aria-labelledby="storm-title" aria-describedby="storm-copy">
+      <p class="eyebrow">The valley is restless</p>
+      <h2 id="storm-title">A little too much wind</h2>
+      <p id="storm-copy">The portfolio has been swept into a playful storm.</p>
+      <button class="button primary" id="reset-storm" type="button">Reset everything</button>
+    </div>
+  </div>
   <div class="opening-screen" id="opening-screen" aria-hidden="true">
     <div class="opening-scene">
       <div class="opening-bg"></div>
