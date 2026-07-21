@@ -205,6 +205,90 @@ a {
   backdrop-filter: blur(16px);
 }
 
+.wind-trail {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.wind-streak,
+.wind-leaf {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform-origin: center;
+  will-change: transform, opacity, filter;
+  mix-blend-mode: screen;
+}
+
+.wind-streak {
+  width: var(--len);
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.04));
+  filter: blur(0.15px) drop-shadow(0 0 4px rgba(255, 255, 255, 0.14));
+  mix-blend-mode: screen;
+  animation: streakDrift var(--dur) ease-out forwards;
+}
+
+.wind-leaf {
+  width: var(--leaf-size);
+  height: calc(var(--leaf-size) * 0.62);
+  border-radius: 100% 0 100% 55%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 28%),
+    linear-gradient(135deg, rgba(191, 220, 138, 0.95), rgba(120, 156, 78, 0.82));
+  box-shadow: 0 0 10px rgba(179, 215, 125, 0.16);
+  opacity: 0.72;
+  animation: leafDrift var(--dur) ease-out forwards;
+}
+
+.wind-leaf::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 12%;
+  width: 1px;
+  height: 80%;
+  background: rgba(255, 255, 255, 0.38);
+  transform: translateX(-50%) rotate(20deg);
+  opacity: 0.35;
+}
+
+@keyframes streakDrift {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--angle)) scaleX(0.18) translateX(0) translateY(0);
+  }
+  18% {
+    opacity: 0.62;
+  }
+  58% {
+    opacity: 0.36;
+    transform: translate(-50%, -50%) rotate(var(--angle)) scaleX(0.9) translateX(calc(var(--travel) * 0.52)) translateY(var(--sway));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--angle)) scaleX(1) translateX(var(--travel)) translateY(0);
+  }
+}
+
+@keyframes leafDrift {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--leaf-rot)) scale(0.72);
+  }
+  18% {
+    opacity: 0.88;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--leaf-dx)), calc(-50% + var(--leaf-dy))) rotate(calc(var(--leaf-rot) + 220deg)) scale(0.92);
+  }
+}
+
 .hero {
   display: grid;
   gap: 18px;
@@ -810,6 +894,15 @@ body.resume-open .portfolio-shell {
 @media (max-width: 760px) {
   body {
     --scene-bg: url("/static/img/opening-ghibli-mobile.png");
+  }
+
+  .wind-trail {
+    opacity: 0 !important;
+  }
+
+  .wind-streak,
+  .wind-leaf {
+    display: none !important;
   }
 
   .portfolio-shell {
