@@ -28,7 +28,7 @@ PORTFOLIO = {
         {
             "name": "Frontend",
             "icon": "▣",
-            "items": ["HTML", "CSS", "JavaScript", "Streamlit"],
+            "items": ["Streamlit"],
         },
         {
             "name": "Backend",
