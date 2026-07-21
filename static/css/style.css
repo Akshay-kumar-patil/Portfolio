@@ -257,6 +257,121 @@ a {
   opacity: 0.35;
 }
 
+.storm-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 52%, rgba(14, 31, 40, 0.08), rgba(8, 20, 29, 0.52));
+  transition: opacity 300ms ease, visibility 300ms ease;
+}
+
+.storm-layer.active {
+  visibility: visible;
+  opacity: 1;
+}
+
+.storm-vortex {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(72vw, 760px);
+  height: min(72vw, 760px);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  filter: blur(0.3px);
+}
+
+.storm-layer.active .storm-vortex {
+  opacity: 1;
+  animation: vortexPulse 2.4s ease-in-out infinite;
+}
+
+.storm-vortex span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 78%;
+  height: 16%;
+  border: 1px solid rgba(232, 247, 242, 0.42);
+  border-left-color: rgba(255, 220, 148, 0.72);
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(191, 230, 220, 0.18);
+  transform: translate(-50%, -50%) rotate(var(--ring-rotation)) scaleY(var(--ring-scale));
+  animation: vortexSpin 1.7s linear infinite;
+}
+
+.storm-vortex span:nth-child(1) { --ring-rotation: 2deg; --ring-scale: 0.55; width: 46%; }
+.storm-vortex span:nth-child(2) { --ring-rotation: 38deg; --ring-scale: 0.72; animation-delay: -0.35s; }
+.storm-vortex span:nth-child(3) { --ring-rotation: 82deg; --ring-scale: 0.88; animation-delay: -0.7s; }
+.storm-vortex span:nth-child(4) { --ring-rotation: 126deg; --ring-scale: 1; animation-delay: -1.05s; }
+.storm-vortex span:nth-child(5) { --ring-rotation: 168deg; --ring-scale: 0.7; width: 92%; animation-delay: -1.4s; }
+
+.storm-alert {
+  position: relative;
+  z-index: 2;
+  width: min(90vw, 420px);
+  padding: 28px;
+  color: #173843;
+  text-align: center;
+  background: rgba(255, 250, 230, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 26px;
+  box-shadow: 0 24px 80px rgba(4, 19, 27, 0.36);
+  backdrop-filter: blur(16px) saturate(120%);
+  opacity: 0;
+  transform: translateY(24px) scale(0.94);
+  pointer-events: none;
+}
+
+.storm-layer.ready .storm-alert {
+  pointer-events: auto;
+  animation: stormAlertIn 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.storm-alert h2 {
+  margin: 8px 0;
+  font-family: var(--display-font);
+  font-size: clamp(1.7rem, 4vw, 2.5rem);
+}
+
+.storm-alert p:not(.eyebrow) {
+  margin: 0 0 18px;
+  line-height: 1.6;
+}
+
+body.storm-active .portfolio-shell {
+  pointer-events: none;
+}
+
+.storm-piece {
+  transform-origin: center;
+  will-change: transform, filter, opacity;
+}
+
+body.storm-active .storm-piece {
+  animation: stormScatter var(--storm-duration) cubic-bezier(0.12, 0.72, 0.18, 1) var(--storm-delay) both;
+}
+
+body.storm-resetting .storm-piece {
+  animation: stormReturn 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body.screen-blink::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background: rgba(255, 250, 219, 0.92);
+  animation: screenBlink 700ms ease-out forwards;
+}
+
 @keyframes streakDrift {
   0% {
     opacity: 0;
@@ -287,6 +402,40 @@ a {
     opacity: 0;
     transform: translate(calc(-50% + var(--leaf-dx)), calc(-50% + var(--leaf-dy))) rotate(calc(var(--leaf-rot) + 220deg)) scale(0.92);
   }
+}
+
+@keyframes vortexPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.82); opacity: 0.58; }
+  50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.92; }
+}
+
+@keyframes vortexSpin {
+  from { margin-left: -2%; transform: translate(-50%, -50%) rotate(var(--ring-rotation)) scaleY(var(--ring-scale)); }
+  to { margin-left: 2%; transform: translate(-50%, -50%) rotate(calc(var(--ring-rotation) + 360deg)) scaleY(var(--ring-scale)); }
+}
+
+@keyframes stormScatter {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); filter: blur(0); opacity: 1; }
+  38% { transform: translate3d(calc(var(--storm-x) * 0.52), calc(var(--storm-y) * 0.52), 0) rotate(calc(var(--storm-rotation) * 0.55)) scale(1.02); filter: blur(0.5px); opacity: 0.94; }
+  100% { transform: translate3d(var(--storm-x), var(--storm-y), 0) rotate(var(--storm-rotation)) scale(var(--storm-scale)); filter: blur(1px); opacity: 0.76; }
+}
+
+@keyframes stormReturn {
+  0% { transform: translate3d(var(--storm-x), var(--storm-y), 0) rotate(var(--storm-rotation)) scale(var(--storm-scale)); filter: blur(1px); opacity: 0.76; }
+  100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); filter: blur(0); opacity: 1; }
+}
+
+@keyframes stormAlertIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes screenBlink {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  48% { opacity: 0.34; }
+  70% { opacity: 0.78; }
+  100% { opacity: 0; }
 }
 
 .hero {
