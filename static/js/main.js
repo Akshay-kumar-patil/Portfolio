@@ -114,8 +114,62 @@ async function boot() {
   achievementsRow.innerHTML = data.achievements.map((item) => `<span class="badge">${item}</span>`).join("");
 
   const windTrail = document.getElementById("wind-trail");
+  const stormLayer = document.getElementById("storm-layer");
+  const resetStormButton = document.getElementById("reset-storm");
+  const portfolioShell = document.querySelector(".portfolio-shell");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  let stormActive = false;
+
+  const randomBetween = (min, max) => min + Math.random() * (max - min);
+  const stormPieces = portfolioShell ? [...portfolioShell.querySelectorAll(".glass, .footer")] : [];
+  stormPieces.forEach((piece) => piece.classList.add("storm-piece"));
+
+  const resetStorm = () => {
+    if (!stormActive) return;
+    stormActive = false;
+    document.body.classList.remove("storm-active");
+    document.body.classList.add("storm-resetting", "screen-blink");
+    stormLayer?.classList.remove("ready");
+    stormLayer?.setAttribute("aria-hidden", "true");
+
+    window.setTimeout(() => {
+      document.body.classList.remove("storm-resetting");
+      stormLayer?.classList.remove("active");
+      document.body.classList.remove("screen-blink");
+      stormPieces.forEach((piece) => {
+        piece.style.removeProperty("--storm-x");
+        piece.style.removeProperty("--storm-y");
+        piece.style.removeProperty("--storm-rotation");
+        piece.style.removeProperty("--storm-scale");
+        piece.style.removeProperty("--storm-delay");
+        piece.style.removeProperty("--storm-duration");
+      });
+    }, 720);
+  };
+
+  const startStorm = () => {
+    if (stormActive || !stormLayer || document.body.classList.contains("resume-open")) return;
+    stormActive = true;
+    stormPieces.forEach((piece, index) => {
+      const direction = index % 2 === 0 ? 1 : -1;
+      piece.style.setProperty("--storm-x", `${randomBetween(-180, 180)}px`);
+      piece.style.setProperty("--storm-y", `${randomBetween(-140, 140)}px`);
+      piece.style.setProperty("--storm-rotation", `${direction * randomBetween(8, 24)}deg`);
+      piece.style.setProperty("--storm-scale", `${randomBetween(0.94, 1.04)}`);
+      piece.style.setProperty("--storm-delay", `${index * 35}ms`);
+      piece.style.setProperty("--storm-duration", `${randomBetween(1500, 2200)}ms`);
+    });
+    document.body.classList.add("storm-active");
+    stormLayer.classList.add("active");
+    stormLayer.setAttribute("aria-hidden", "false");
+    window.setTimeout(() => {
+      if (stormActive) stormLayer.classList.add("ready");
+    }, 1450);
+  };
+
+  resetStormButton?.addEventListener("click", resetStorm);
+
   if (windTrail && !reducedMotion && !coarsePointer) {
     const rand = (min, max) => min + Math.random() * (max - min);
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -123,6 +177,9 @@ async function boot() {
     let lastX = null;
     let lastY = null;
     let lastSpawn = 0;
+    let fastStartedAt = null;
+    let lastMoveAt = null;
+    let fastDistance = 0;
 
     const prune = () => {
       while (trailNodes.length > 36) {
@@ -160,6 +217,18 @@ async function boot() {
       const angle = Math.atan2(dy, dx) * 180 / Math.PI;
       const now = performance.now();
       const spacing = now - lastSpawn;
+      const elapsed = Math.max(now - (lastMoveAt ?? now), 1);
+      const speed = distance / elapsed * 1000;
+      const isFast = speed > 350 || distance > 8;
+      if (isFast && elapsed < 240) {
+        fastStartedAt ??= now;
+        fastDistance += distance;
+        if (now - fastStartedAt >= 5000 && fastDistance >= 650) startStorm();
+      } else {
+        fastStartedAt = null;
+        fastDistance = 0;
+      }
+      lastMoveAt = now;
       const flowX = dx / distance;
       const flowY = dy / distance;
       const normalX = -flowY;
@@ -202,10 +271,16 @@ async function boot() {
     window.addEventListener("pointerleave", () => {
       lastX = null;
       lastY = null;
+      fastStartedAt = null;
+      lastMoveAt = null;
+      fastDistance = 0;
     });
     window.addEventListener("blur", () => {
       lastX = null;
       lastY = null;
+      fastStartedAt = null;
+      lastMoveAt = null;
+      fastDistance = 0;
     });
   }
 
