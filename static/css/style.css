@@ -64,7 +64,7 @@ a {
   margin: 0 auto;
   padding: 28px 0 48px;
   position: relative;
-  z-index: 0;
+  z-index: 3;
 }
 
 .opening-screen {
@@ -208,7 +208,7 @@ a {
 .wind-trail {
   position: fixed;
   inset: 0;
-  z-index: 2;
+  z-index: 1;
   pointer-events: none;
   overflow: hidden;
 }
@@ -751,6 +751,38 @@ body.screen-blink::after {
   align-content: space-between;
 }
 
+.hero-stats {
+  padding: 22px;
+  overflow: hidden;
+}
+
+.hero-stats .panel-head {
+  margin-bottom: 14px;
+}
+
+.hero-stats .panel-head h3 {
+  margin-top: 4px;
+}
+
+.hero-stats .metric-card {
+  min-width: 0;
+  min-height: 96px;
+  padding: 16px 16px 14px;
+  align-content: start;
+  align-items: start;
+}
+
+.hero-stats .metric-value {
+  line-height: 0.95;
+}
+
+.hero-stats .metric-label {
+  display: block;
+  max-width: 100%;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .metric-value {
   font-family: var(--display-font);
   font-size: 1.95rem;
@@ -774,10 +806,94 @@ body.screen-blink::after {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
 }
 
+.hero-analytics .panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(103, 117, 153, 0.30);
+}
+
+.hero-analytics .panel-head .eyebrow {
+  color: #a8b1c5;
+}
+
+.hero-analytics .panel-head h3 {
+  margin: 0;
+  color: #dce4f2;
+  font-size: clamp(1.25rem, 2.4vw, 1.72rem);
+}
+
+.analytics-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.86fr) minmax(0, 1.14fr);
+  gap: 18px;
+  margin-top: 16px;
+  align-items: stretch;
+}
+
+.competency-map {
+  min-height: 330px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  padding: 18px;
+  border: 1px solid rgba(72, 86, 120, 0.56);
+  background: radial-gradient(circle at center, rgba(19, 45, 62, 0.48), rgba(5, 10, 20, 0.80) 68%);
+  border-radius: 4px;
+}
+
+.competency-map svg {
+  width: min(100%, 300px);
+  height: auto;
+  overflow: visible;
+}
+
+.map-grid circle,
+.map-grid path {
+  fill: none;
+  stroke: rgba(65, 143, 166, 0.34);
+  stroke-width: 1;
+}
+
+.map-area {
+  fill: rgba(19, 169, 185, 0.26);
+  stroke: rgba(101, 225, 235, 0.72);
+  stroke-width: 2;
+}
+
+.map-line {
+  fill: none;
+  stroke: rgba(150, 115, 255, 0.86);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 5px rgba(78, 193, 221, 0.5));
+}
+
+.map-points circle {
+  fill: #a4edee;
+  stroke: #5b77ff;
+  stroke-width: 2;
+}
+
+.competency-map > p {
+  width: 100%;
+  margin: 2px 0 0;
+  color: #7f8aa1;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+}
+
+.map-signal {
+  color: #73b8ff;
+  font-size: 1rem;
+}
+
 .domain-mastery {
   display: grid;
   gap: 14px;
-  margin-top: 14px;
+  margin-top: 0;
+  align-content: start;
 }
 
 .domain-group {
@@ -810,18 +926,18 @@ body.screen-blink::after {
 .domain-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 9px;
+  gap: 8px;
 }
 
 .domain-tag {
   display: inline-flex;
   align-items: center;
-  padding: 8px 11px;
+  padding: 7px 10px;
   border-radius: 9px;
   background: rgba(9, 12, 23, 0.94);
   border: 1px solid rgba(72, 86, 120, 0.56);
   color: #d1daea;
-  font-size: 0.86rem;
+  font-size: 0.78rem;
   letter-spacing: 0.01em;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
 }
@@ -1022,6 +1138,77 @@ body.resume-open .portfolio-shell {
   user-select: none;
 }
 
+/* Give large laptop and monitor layouts more breathing room. */
+@media (min-width: 1200px) {
+  .portfolio-shell {
+    width: min(1440px, calc(100vw - 72px));
+    padding-top: 32px;
+    padding-bottom: 76px;
+  }
+
+  .hero {
+    min-height: calc(100vh - 32px);
+    gap: 28px;
+    padding-bottom: 42px;
+    align-content: center;
+  }
+
+  .hero-panels {
+    gap: 24px;
+  }
+
+  .hero-intro {
+    padding: 36px 38px;
+    gap: 14px;
+  }
+
+  .hero-stats,
+  .hero-analytics {
+    padding: 34px;
+  }
+
+  .hero-stats .metric-card {
+    min-height: 132px;
+    padding: 24px 22px 20px;
+  }
+
+  .section {
+    margin-top: 30px;
+    padding: 40px;
+  }
+
+  .section-heading {
+    margin-bottom: 28px;
+  }
+
+  .cards {
+    gap: 24px;
+  }
+
+  .card {
+    padding: 32px 30px;
+    border-radius: 26px;
+  }
+
+  .skills-grid {
+    gap: 18px;
+  }
+
+  .skill-group {
+    padding: 28px;
+  }
+
+  .contact-strip {
+    gap: 28px;
+    padding: 28px;
+  }
+
+  .footer {
+    margin-top: 24px;
+    padding: 24px 28px;
+  }
+}
+
 @media (max-width: 1100px) {
   .skills-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1077,6 +1264,22 @@ body.resume-open .portfolio-shell {
   .section,
   .hero-card {
     padding: 18px;
+  }
+
+  .hero-analytics .panel-head {
+    display: block;
+  }
+
+  .hero-analytics .panel-head h3 {
+    margin-top: 6px;
+  }
+
+  .analytics-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .competency-map {
+    min-height: 260px;
   }
 
   .grid-3,
