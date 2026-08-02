@@ -27,42 +27,42 @@ PORTFOLIO = {
     "domain_mastery": [
         {
             "name": "Frontend",
-            "icon": "▣",
+            "icon": "[]",
             "items": ["Streamlit"],
         },
         {
             "name": "Backend",
-            "icon": "▤",
+            "icon": "<>",
             "items": ["Python", "FastAPI", "Flask", "WebSockets"],
         },
         {
             "name": "AI / ML / CV",
-            "icon": "◈",
+            "icon": "AI",
             "items": ["PyTorch", "TensorFlow", "Scikit-Learn", "OpenCV"],
         },
         {
             "name": "RAG / LLMs",
-            "icon": "◉",
+            "icon": "LL",
             "items": ["LangChain", "RAG", "Gemini", "Groq"],
         },
         {
             "name": "Databases",
-            "icon": "◫",
+            "icon": "DB",
             "items": ["MySQL", "MongoDB"],
         },
         {
             "name": "Automation / AI Agents",
-            "icon": "◌",
+            "icon": "AG",
             "items": ["n8n", "HuggingFace", "Whisper", "gTTS"],
         },
         {
             "name": "Core / DSA",
-            "icon": "◐",
+            "icon": "C+",
             "items": ["C++", "DSA in C++", "C"],
         },
         {
             "name": "Tools",
-            "icon": "◒",
+            "icon": "TL",
             "items": ["Git", "GitHub", "VS Code", "Google Colab"],
         },
     ],
