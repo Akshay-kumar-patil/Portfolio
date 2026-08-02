@@ -1,5 +1,8 @@
 async function boot() {
   const response = await fetch("/api/profile.json", { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Profile request failed with ${response.status}`);
+  }
   const data = await response.json();
 
   const setText = (id, value) => {
@@ -15,10 +18,6 @@ async function boot() {
   } else {
     setText("summary-list", data.summary);
   }
-  setText("role", data.title);
-  setText("location", data.location);
-  setText("education-tag", data.education_tag);
-  setText("email", data.contact.email);
   setText("contact-email", data.contact.email);
 
   const links = ["github-link", "footer-github"];
@@ -38,27 +37,33 @@ async function boot() {
   });
 
   const heroChips = document.getElementById("hero-chips");
-  heroChips.innerHTML = data.hero.chips.map((item) => `<span class="hero-chip">${item}</span>`).join("");
+  if (heroChips) {
+    heroChips.innerHTML = data.hero.chips.map((item) => `<span class="hero-chip">${item}</span>`).join("");
+  }
 
   const heroMetrics = document.getElementById("hero-metrics");
-  heroMetrics.innerHTML = data.metrics.map((metric) => `
-    <article class="metric-card">
-      <span class="metric-value">${metric.value}</span>
-      <span class="metric-label">${metric.label}</span>
-    </article>
-  `).join("");
+  if (heroMetrics) {
+    heroMetrics.innerHTML = data.metrics.map((metric) => `
+      <article class="metric-card">
+        <span class="metric-value">${metric.value}</span>
+        <span class="metric-label">${metric.label}</span>
+      </article>
+    `).join("");
+  }
 
   const projectsGrid = document.getElementById("projects-grid");
-  projectsGrid.innerHTML = data.projects.map((item) => `
-    <article class="card">
-      <h4>${item.name}</h4>
-      <p>${item.tagline}</p>
-      <a class="repo-link" href="${item.repo}" target="_blank" rel="noreferrer">View Repo</a>
-      <ul class="project-list">
-        ${item.details.map((detail) => `<li>${detail}</li>`).join("")}
-      </ul>
-    </article>
-  `).join("");
+  if (projectsGrid) {
+    projectsGrid.innerHTML = data.projects.map((item) => `
+      <article class="card">
+        <h4>${item.name}</h4>
+        <p>${item.tagline}</p>
+        <a class="repo-link" href="${item.repo}" target="_blank" rel="noreferrer">View Repo</a>
+        <ul class="project-list">
+          ${item.details.map((detail) => `<li>${detail}</li>`).join("")}
+        </ul>
+      </article>
+    `).join("");
+  }
 
   const specialProject = document.getElementById("special-project");
   if (specialProject && data.special_project) {
@@ -76,42 +81,50 @@ async function boot() {
   }
 
   const educationGrid = document.getElementById("education-grid");
-  educationGrid.innerHTML = data.education.map((item) => `
-    <article class="card">
-      <h4>${item.degree}</h4>
-      <p>${item.institution}</p>
-      <div class="timeline">
-        <div class="timeline-item"><strong>Duration</strong>${item.duration}</div>
-        <div class="timeline-item"><strong>Metric</strong>${item.metric}</div>
-      </div>
-    </article>
-  `).join("");
+  if (educationGrid) {
+    educationGrid.innerHTML = data.education.map((item) => `
+      <article class="card">
+        <h4>${item.degree}</h4>
+        <p>${item.institution}</p>
+        <div class="timeline">
+          <div class="timeline-item"><strong>Duration</strong>${item.duration}</div>
+          <div class="timeline-item"><strong>Metric</strong>${item.metric}</div>
+        </div>
+      </article>
+    `).join("");
+  }
 
   const skillsGrid = document.getElementById("skills-grid");
-  skillsGrid.innerHTML = Object.entries(data.skills).map(([group, values]) => `
-    <div class="skill-group">
-      <h4>${group}</h4>
-      <div class="skill-tags">
-        ${values.map((value) => `<span class="skill-tag">${value}</span>`).join("")}
+  if (skillsGrid) {
+    skillsGrid.innerHTML = Object.entries(data.skills).map(([group, values]) => `
+      <div class="skill-group">
+        <h4>${group}</h4>
+        <div class="skill-tags">
+          ${values.map((value) => `<span class="skill-tag">${value}</span>`).join("")}
+        </div>
       </div>
-    </div>
-  `).join("");
+    `).join("");
+  }
 
   const domainBoard = document.getElementById("domain-mastery");
-  domainBoard.innerHTML = data.domain_mastery.map((group) => `
-    <section class="domain-group">
-      <div class="domain-title">
-        <span class="domain-icon">${group.icon}</span>
-        <h4>${group.name}</h4>
-      </div>
-      <div class="domain-tags">
-        ${group.items.map((item) => `<span class="domain-tag">${item}</span>`).join("")}
-      </div>
-    </section>
-  `).join("");
+  if (domainBoard) {
+    domainBoard.innerHTML = data.domain_mastery.map((group) => `
+      <section class="domain-group">
+        <div class="domain-title">
+          <span class="domain-icon" aria-hidden="true">${group.icon}</span>
+          <h4>${group.name}</h4>
+        </div>
+        <div class="domain-tags">
+          ${group.items.map((item) => `<span class="domain-tag">${item}</span>`).join("")}
+        </div>
+      </section>
+    `).join("");
+  }
 
   const achievementsRow = document.getElementById("achievements-row");
-  achievementsRow.innerHTML = data.achievements.map((item) => `<span class="badge">${item}</span>`).join("");
+  if (achievementsRow) {
+    achievementsRow.innerHTML = data.achievements.map((item) => `<span class="badge">${item}</span>`).join("");
+  }
 
   const windTrail = document.getElementById("wind-trail");
   const stormLayer = document.getElementById("storm-layer");
@@ -288,6 +301,7 @@ async function boot() {
   const enterButton = document.getElementById("enter-button");
   const dismissOpening = () => {
     if (!openingScreen || openingScreen.classList.contains("hide")) return;
+    openingScreen.setAttribute("aria-hidden", "true");
     openingScreen.classList.add("hide");
     window.setTimeout(() => {
       openingScreen.style.display = "none";
@@ -301,6 +315,14 @@ async function boot() {
   });
   window.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === "Escape") dismissOpening();
+    if (event.key === "Escape") {
+      if (document.body.classList.contains("resume-open")) {
+        closeResume();
+      }
+      if (stormActive) {
+        resetStorm();
+      }
+    }
   });
 
   const revealTargets = document.querySelectorAll(".reveal");
@@ -316,10 +338,12 @@ async function boot() {
   const modal = document.getElementById("resume-modal");
   const openResume = () => {
     modal?.classList.add("open");
+    modal?.setAttribute("aria-hidden", "false");
     document.body.classList.add("resume-open");
   };
   const closeResume = () => {
     modal?.classList.remove("open");
+    modal?.setAttribute("aria-hidden", "true");
     document.body.classList.remove("resume-open");
   };
 
@@ -341,4 +365,12 @@ async function boot() {
 
 boot().catch((error) => {
   console.error("Portfolio failed to load", error);
+  const headline = document.getElementById("headline");
+  const summaryList = document.getElementById("summary-list");
+  if (headline) {
+    headline.textContent = "Portfolio content is loading with a temporary issue.";
+  }
+  if (summaryList) {
+    summaryList.innerHTML = "<li>Please refresh the page once. If the issue continues, restart the local Python server.</li>";
+  }
 });
