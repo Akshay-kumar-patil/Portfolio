@@ -127,6 +127,7 @@ async function boot() {
   }
 
   const windTrail = document.getElementById("wind-trail");
+  const cursorGlow = document.getElementById("cursor-glow");
   const stormLayer = document.getElementById("storm-layer");
   const resetStormButton = document.getElementById("reset-storm");
   const portfolioShell = document.querySelector(".portfolio-shell");
@@ -193,6 +194,20 @@ async function boot() {
     let fastStartedAt = null;
     let lastMoveAt = null;
     let fastDistance = 0;
+    let glowHideTimer = null;
+
+    const showCursorGlow = (x, y) => {
+      if (!cursorGlow) return;
+      cursorGlow.style.left = `${x}px`;
+      cursorGlow.style.top = `${y}px`;
+      cursorGlow.classList.add("active");
+      if (glowHideTimer) {
+        window.clearTimeout(glowHideTimer);
+      }
+      glowHideTimer = window.setTimeout(() => {
+        cursorGlow.classList.remove("active");
+      }, 180);
+    };
 
     const prune = () => {
       while (trailNodes.length > 36) {
@@ -218,6 +233,7 @@ async function boot() {
     const handleMove = (event) => {
       const x = event.clientX;
       const y = event.clientY;
+      showCursorGlow(x, y);
       if (lastX === null || lastY === null) {
         lastX = x;
         lastY = y;
@@ -287,6 +303,7 @@ async function boot() {
       fastStartedAt = null;
       lastMoveAt = null;
       fastDistance = 0;
+      cursorGlow?.classList.remove("active");
     });
     window.addEventListener("blur", () => {
       lastX = null;
@@ -294,6 +311,7 @@ async function boot() {
       fastStartedAt = null;
       lastMoveAt = null;
       fastDistance = 0;
+      cursorGlow?.classList.remove("active");
     });
   }
 
