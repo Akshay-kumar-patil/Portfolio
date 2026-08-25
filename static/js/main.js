@@ -391,42 +391,266 @@ async function boot() {
     document.getElementById("contact-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
-  // ── Full bg reveal when jp-scene enters view ──
-  const jpScene = document.getElementById("jp-scene");
-  if (jpScene) {
-    const jpObserver = new IntersectionObserver((entries) => {
+  // ── Matrix Fabric Section Full BG Reveal Observer ──
+  const matrixSection = document.getElementById("matrix-section");
+  if (matrixSection) {
+    new IntersectionObserver((entries) => {
       entries.forEach((e) => document.body.classList.toggle("jp-revealed", e.isIntersecting));
-    }, { threshold: 0.05 });
-    jpObserver.observe(jpScene);
+    }, { threshold: 0.05 }).observe(matrixSection);
   }
 
-  // ── Noren curtain mouse tracking ──
-  const norenEl = document.getElementById("jp-noren");
-  if (norenEl) {
-    const panels = [...norenEl.querySelectorAll(".jp-noren-panel")];
-    const STRENGTH = 14; // max tilt degrees
+  // ── Neural Matrix Fabric Canvas Simulation (Optimized 60 FPS) ──
+  (function initMatrixFabric() {
+    const canvas = document.getElementById("matrix-fabric-canvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
 
-    window.addEventListener("pointermove", (e) => {
-      const rect = norenEl.getBoundingClientRect();
-      const norenCX = rect.left + rect.width / 2;
-      const panelW  = rect.width / panels.length;
-      panels.forEach((panel, i) => {
-        const panelCX = rect.left + panelW * i + panelW / 2;
-        const dx = e.clientX - panelCX;
-        const dy = e.clientY - (rect.top + rect.height * 0.5);
-        const dist = Math.hypot(dx, dy);
-        const falloff = Math.max(0, 1 - dist / 360);
-        const tiltX = (dy / 180) * STRENGTH * falloff;
-        const tiltZ = (dx / 260) * STRENGTH * falloff * 0.5;
-        panel.style.transform = `perspective(600px) rotateX(${-tiltX}deg) rotateZ(${tiltZ}deg)`;
-      });
+    const CHARS = [
+      "const", "let", "var", "function", "return", "import", "from", "async", "await",
+      "0", "1", "x", "y", "z", "{", "}", "[", "]", "(", ")", "=>", ";", ":", "<", ">",
+      "=", "+", "-", "*", "/", "&&", "||", "AI", "ML", "code", "fabric", "neural", "node"
+    ];
+
+    let cols = 28;
+    let rows = 12;
+    let grid = [];
+    let isDragging = false;
+    let mouse = { x: -9999, y: -9999, px: -9999, py: -9999, vx: 0, vy: 0 };
+    let isVisible = true;
+
+    // Pause animation when out of view to save battery and CPU
+    new IntersectionObserver((entries) => {
+      isVisible = entries[0].isIntersecting;
+    }, { threshold: 0.01 }).observe(canvas);
+
+    function initGrid() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const w = rect.width || 800;
+      const h = rect.height || 400;
+
+      canvas.width = w;
+      canvas.height = h;
+
+      // Optimized node spacing for max performance (approx 250 nodes)
+      cols = Math.max(16, Math.floor(w / 42));
+      rows = Math.max(8, Math.floor(h / 32));
+
+      grid = [];
+      const cellW = w / (cols - 1);
+      const cellH = h / (rows - 1);
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const bx = c * cellW;
+          const by = r * cellH;
+          grid.push({
+            baseX: bx,
+            baseY: by,
+            x: bx,
+            y: by,
+            vx: 0,
+            vy: 0,
+            char: CHARS[Math.floor(Math.random() * CHARS.length)],
+            isBright: Math.random() < 0.12,
+            r, c,
+            phase: (c * 0.3) + (r * 0.25)
+          });
+        }
+      }
+    }
+
+    function updatePhysics(t) {
+      const spring = 0.05;
+      const damping = 0.85;
+      const radiusSq = 140 * 140;
+
+      mouse.vx = mouse.x - mouse.px;
+      mouse.vy = mouse.y - mouse.py;
+      mouse.px = mouse.x;
+      mouse.py = mouse.y;
+
+      const hasMouse = mouse.x > -1000;
+      const totalNodes = grid.length;
+
+      for (let i = 0; i < totalNodes; i++) {
+        const node = grid[i];
+
+        // Ambient breeze formula
+        const breezeX = Math.sin(t * 1.5 + node.r * 0.4 + node.phase) * 5 * (node.r / rows);
+        const breezeY = Math.cos(t * 1.2 + node.c * 0.3) * 2.5 * (node.r / rows);
+
+        const targetX = node.baseX + breezeX;
+        const targetY = node.baseY + breezeY;
+
+        if (hasMouse) {
+          const dx = node.x - mouse.x;
+          const dy = node.y - mouse.y;
+          const dSq = dx * dx + dy * dy;
+
+          if (dSq < radiusSq && dSq > 0) {
+            const dist = Math.sqrt(dSq);
+            const force = (1 - dist / 140);
+            const push = force * (isDragging ? 32 : 18);
+
+            node.vx += (dx / dist) * push * 0.22;
+            node.vy += (dy / dist) * push * 0.22;
+
+            if (mouse.vx !== 0 || mouse.vy !== 0) {
+              node.vx += mouse.vx * force * 0.35;
+              node.vy += mouse.vy * force * 0.35;
+            }
+          }
+        }
+
+        const ax = (targetX - node.x) * spring;
+        const ay = (targetY - node.y) * spring;
+
+        node.vx = (node.vx + ax) * damping;
+        node.vy = (node.vy + ay) * damping;
+
+        node.x += node.vx;
+        node.y += node.vy;
+      }
+    }
+
+    function render(t) {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Fast background clear
+      ctx.fillStyle = "#050811";
+      ctx.fillRect(0, 0, w, h);
+
+      // 1. Single Path Batching for Grid Weave Threads (Silky Smooth)
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(60, 130, 210, 0.08)";
+      ctx.lineWidth = 0.75;
+
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          const idx = r * cols + c;
+          const node = grid[idx];
+          if (r === 0) ctx.moveTo(node.x, node.y);
+          else ctx.lineTo(node.x, node.y);
+        }
+      }
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const idx = r * cols + c;
+          const node = grid[idx];
+          if (c === 0) ctx.moveTo(node.x, node.y);
+          else ctx.lineTo(node.x, node.y);
+        }
+      }
+      ctx.stroke();
+
+      // 2. Optimized Text Rendering (Constant font & no shadow thrashing)
+      ctx.font = '12px "Roboto Mono", "Fira Code", monospace';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      const totalNodes = grid.length;
+      for (let i = 0; i < totalNodes; i++) {
+        const node = grid[i];
+        if (node.isBright) {
+          ctx.fillStyle = "rgba(255, 185, 90, 0.85)";
+        } else {
+          ctx.fillStyle = "rgba(150, 195, 240, 0.35)";
+        }
+        ctx.fillText(node.char, node.x, node.y);
+      }
+
+      // 3. Center Hero Title & Radial Glow
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+
+      // Radial warmth glow behind center title
+      const glowGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, Math.min(w * 0.35, 240));
+      glowGrad.addColorStop(0, "rgba(255, 120, 20, 0.25)");
+      glowGrad.addColorStop(0.5, "rgba(255, 70, 0, 0.08)");
+      glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = glowGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Title Text
+      const isMobile = w < 600;
+      const titleText = isMobile ? "AKSHAY PATIL" : "AKSHAY KUMAR PATIL";
+      const titleFontSize = isMobile ? Math.min(34, w * 0.08) : Math.min(50, w * 0.052);
+
+      ctx.save();
+      ctx.font = `900 ${titleFontSize}px "Orbitron", "Inter", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      // Enable glow ONLY for the title text
+      ctx.shadowColor = "rgba(255, 130, 30, 0.8)";
+      ctx.shadowBlur = 20;
+
+      const textGrad = ctx.createLinearGradient(cx - 180, cy, cx + 180, cy);
+      textGrad.addColorStop(0, "#ffe0b2");
+      textGrad.addColorStop(0.5, "#ff9e43");
+      textGrad.addColorStop(1, "#ff6b00");
+
+      ctx.fillStyle = textGrad;
+      ctx.fillText(titleText, cx, cy);
+
+      // Subtitle below title
+      ctx.shadowBlur = 8;
+      ctx.font = `500 ${Math.max(10, titleFontSize * 0.26)}px "Roboto Mono", monospace`;
+      ctx.fillStyle = "rgba(255, 215, 160, 0.85)";
+      ctx.fillText("AI / ML ENGINEER & FULL STACK DEVELOPER", cx, cy + titleFontSize * 0.85);
+
+      ctx.restore();
+    }
+
+    function loop(time) {
+      if (isVisible) {
+        const t = time * 0.001;
+        updatePhysics(t);
+        render(t);
+      }
+      requestAnimationFrame(loop);
+    }
+
+    // Event Listeners with passive performance optimizations
+    canvas.addEventListener("pointerdown", (e) => {
+      isDragging = true;
+      const r = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - r.left;
+      mouse.y = e.clientY - r.top;
+      mouse.px = mouse.x;
+      mouse.py = mouse.y;
     }, { passive: true });
 
-    // Reset on leave
-    window.addEventListener("pointerleave", () => {
-      panels.forEach((p) => { p.style.transform = ""; });
-    });
-  }
+    window.addEventListener("pointermove", (e) => {
+      const r = canvas.getBoundingClientRect();
+      if (
+        e.clientX >= r.left &&
+        e.clientX <= r.right &&
+        e.clientY >= r.top &&
+        e.clientY <= r.bottom
+      ) {
+        mouse.x = e.clientX - r.left;
+        mouse.y = e.clientY - r.top;
+      } else if (!isDragging) {
+        mouse.x = -9999;
+        mouse.y = -9999;
+      }
+    }, { passive: true });
+
+    window.addEventListener("pointerup", () => {
+      isDragging = false;
+    }, { passive: true });
+
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(initGrid, 150);
+    }, { passive: true });
+
+    initGrid();
+    requestAnimationFrame(loop);
+  })();
 }
 
 boot().catch((error) => {
