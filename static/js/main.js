@@ -353,6 +353,17 @@ async function boot() {
   }, { threshold: 0.18 });
   revealTargets.forEach((node) => observer.observe(node));
 
+  const skillsBg = document.getElementById("skills-bg");
+  const skillsAnchor = document.getElementById("skills-anchor");
+  if (skillsBg && skillsAnchor) {
+    const bgObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        skillsBg.classList.toggle("visible", entry.isIntersecting);
+      });
+    }, { rootMargin: "0px 0px -10% 0px", threshold: 0.05 });
+    bgObserver.observe(skillsAnchor);
+  }
+
   const modal = document.getElementById("resume-modal");
   const openResume = () => {
     modal?.classList.add("open");
