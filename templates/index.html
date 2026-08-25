@@ -156,24 +156,35 @@
 
   </main>
 
-  <!-- Japanese Temple Scene -->
-  <section class="jp-scene" id="jp-scene" aria-label="Japanese temple">
-    <div class="jp-img-bg"></div>
-    <div class="jp-overlay"></div>
-    <!-- Canvas noren sits over the temple entrance area -->
-    <div class="jp-noren-wrap">
-      <div class="jp-noren-rod"></div>
-      <canvas id="jp-noren-canvas" class="jp-noren-canvas"></canvas>
-    </div>
-    <!-- Links -->
-    <div class="jp-links">
-      <a id="footer-github" href="#" target="_blank" rel="noreferrer">GitHub</a>
-      <span class="jp-sep">·</span>
-      <a id="footer-linkedin" href="#" target="_blank" rel="noreferrer">LinkedIn</a>
-      <span class="jp-sep">·</span>
-      <a id="footer-resume" href="#" target="_blank" rel="noreferrer">Resume</a>
-    </div>
-  </section>
+    <!-- Neural Matrix Fabric Section -->
+    <section class="section matrix-fabric-section glass reveal" id="matrix-section">
+      <div class="matrix-header">
+        <div class="matrix-title-group">
+          <p class="eyebrow">Neural Matrix Fabric</p>
+          <p class="matrix-desc">Hover or drag the curtain — the source code itself hangs like fabric in the breeze.</p>
+        </div>
+        <div class="matrix-badge">
+          <svg class="matrix-badge-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h6v6M14 10l6-6M9 21H3v-6M10 14l-6 6"/>
+          </svg>
+          <span>hover &middot; drag to stretch</span>
+        </div>
+      </div>
+
+      <div class="matrix-canvas-card">
+        <canvas id="matrix-fabric-canvas"></canvas>
+      </div>
+
+      <footer class="matrix-footer">
+        <p class="footer-links">
+          <a id="footer-github" href="#" target="_blank" rel="noreferrer">GitHub</a>
+          <span>&middot;</span>
+          <a id="footer-linkedin" href="#" target="_blank" rel="noreferrer">LinkedIn</a>
+          <span>&middot;</span>
+          <a id="footer-resume" href="#" target="_blank" rel="noreferrer">Resume PDF</a>
+        </p>
+      </footer>
+    </section>
 
   <div class="resume-modal" id="resume-modal" aria-hidden="true">
     <div class="resume-backdrop" id="resume-backdrop"></div>
