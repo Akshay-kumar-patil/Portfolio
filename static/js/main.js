@@ -390,6 +390,43 @@ async function boot() {
   document.getElementById("contact-me")?.addEventListener("click", () => {
     document.getElementById("contact-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
+
+  // ── Full bg reveal when jp-scene enters view ──
+  const jpScene = document.getElementById("jp-scene");
+  if (jpScene) {
+    const jpObserver = new IntersectionObserver((entries) => {
+      entries.forEach((e) => document.body.classList.toggle("jp-revealed", e.isIntersecting));
+    }, { threshold: 0.05 });
+    jpObserver.observe(jpScene);
+  }
+
+  // ── Noren curtain mouse tracking ──
+  const norenEl = document.getElementById("jp-noren");
+  if (norenEl) {
+    const panels = [...norenEl.querySelectorAll(".jp-noren-panel")];
+    const STRENGTH = 14; // max tilt degrees
+
+    window.addEventListener("pointermove", (e) => {
+      const rect = norenEl.getBoundingClientRect();
+      const norenCX = rect.left + rect.width / 2;
+      const panelW  = rect.width / panels.length;
+      panels.forEach((panel, i) => {
+        const panelCX = rect.left + panelW * i + panelW / 2;
+        const dx = e.clientX - panelCX;
+        const dy = e.clientY - (rect.top + rect.height * 0.5);
+        const dist = Math.hypot(dx, dy);
+        const falloff = Math.max(0, 1 - dist / 360);
+        const tiltX = (dy / 180) * STRENGTH * falloff;
+        const tiltZ = (dx / 260) * STRENGTH * falloff * 0.5;
+        panel.style.transform = `perspective(600px) rotateX(${-tiltX}deg) rotateZ(${tiltZ}deg)`;
+      });
+    }, { passive: true });
+
+    // Reset on leave
+    window.addEventListener("pointerleave", () => {
+      panels.forEach((p) => { p.style.transform = ""; });
+    });
+  }
 }
 
 boot().catch((error) => {
