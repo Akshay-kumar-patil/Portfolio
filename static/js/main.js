@@ -575,7 +575,7 @@ async function boot() {
       // Title Text
       const isMobile = w < 600;
       const titleText = isMobile ? "AKSHAY PATIL" : "AKSHAY KUMAR PATIL";
-      const titleFontSize = isMobile ? Math.min(34, w * 0.08) : Math.min(50, w * 0.052);
+      const titleFontSize = isMobile ? Math.min(24, w * 0.06) : Math.min(36, w * 0.038);
 
       ctx.save();
       ctx.font = `900 ${titleFontSize}px "Orbitron", "Inter", sans-serif`;
