@@ -1236,25 +1236,353 @@ body.screen-blink::after {
   background: #fff;
 }
 
-.footer {
-  margin-top: 18px;
-  padding: 18px 22px;
-  text-align: center;
-  color: #d9ecff;
+/* ── Japanese House Scene ───────────────────────── */
+.jp-scene {
+  position: relative;
+  width: 100%;
+  margin-top: 0;
+  overflow: hidden;
+  z-index: 3;
 }
 
-.footer p {
-  margin: 0;
-  line-height: 1.6;
+/* After achievements, let the background breathe fully */
+.jp-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(180deg, rgba(3,8,18,0.52) 0%, rgba(2,6,14,0.12) 60%, rgba(1,3,8,0) 100%);
+  pointer-events: none;
 }
 
-.footer-links {
-  margin-top: 10px !important;
+/* Reveal background fully for jp-scene — override skills-bg opacity */
+body.jp-revealed .skills-bg { opacity: 1; filter: saturate(0.92) contrast(1.06) brightness(0.72) blur(0px); }
+
+/* ROOF */
+.jp-roof {
+  position: relative;
+  width: min(900px, 92vw);
+  margin: 0 auto;
+  height: 160px;
+  z-index: 2;
+}
+
+.jp-roof-left,
+.jp-roof-right {
+  position: absolute;
+  bottom: 0;
+  width: 52%;
+  height: 100%;
+  background:
+    linear-gradient(180deg, #1a1208 0%, #2c1e0a 40%, #3b2810 100%);
+  border-top: 3px solid #6b4a1e;
+}
+
+.jp-roof-left {
+  left: 0;
+  clip-path: polygon(0% 100%, 100% 100%, 100% 72%, 70% 36%, 50% 0%);
+  box-shadow: inset -4px 0 18px rgba(0,0,0,0.55);
+}
+
+.jp-roof-right {
+  right: 0;
+  clip-path: polygon(0% 72%, 30% 36%, 50% 0%, 100% 100%, 0% 100%);
+  box-shadow: inset 4px 0 18px rgba(0,0,0,0.55);
+}
+
+/* Curved upturned eave tips */
+.jp-roof-tip {
+  position: absolute;
+  bottom: -8px;
+  width: 80px;
+  height: 36px;
+  background: linear-gradient(180deg, #2e1c0a, #3e2810);
+  border-radius: 0 0 50% 50%;
+  border: 2px solid #6b4a1e;
+  z-index: 3;
+}
+.jp-roof-tip--left  { left: -18px;  transform: rotate(24deg); }
+.jp-roof-tip--right { right: -18px; transform: rotate(-24deg); }
+
+/* Ridge at peak */
+.jp-roof-ridge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 24px;
+  background: linear-gradient(180deg, #4a3010, #2c1e08);
+  border-radius: 8px 8px 0 0;
+  border: 2px solid #7a5828;
+  z-index: 5;
+}
+
+/* Finial ornament */
+.jp-roof-ornament {
+  position: absolute;
+  top: -52px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  z-index: 6;
 }
+.jp-roof-ornament-ring {
+  width: 22px; height: 22px;
+  border: 3px solid #c8922a;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 0 14px rgba(220,160,50,0.5);
+}
+.jp-roof-ornament-ball {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe07a, #c8922a 60%, #7a4810);
+  box-shadow: 0 0 20px rgba(220,160,60,0.7), 0 2px 8px rgba(0,0,0,0.5);
+  margin-bottom: 6px;
+}
+
+/* Tile texture overlays */
+.jp-tiles {
+  position: absolute;
+  bottom: 0;
+  width: 52%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+  background-image:
+    repeating-linear-gradient(
+      transparent,
+      transparent 14px,
+      rgba(0,0,0,0.28) 14px,
+      rgba(0,0,0,0.28) 16px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 28px,
+      rgba(0,0,0,0.14) 28px,
+      rgba(0,0,0,0.14) 30px
+    );
+}
+.jp-tiles--left  { left: 0;  clip-path: polygon(0% 100%, 100% 100%, 100% 72%, 70% 36%, 50% 0%); }
+.jp-tiles--right { right: 0; clip-path: polygon(0% 72%, 30% 36%, 50% 0%, 100% 100%, 0% 100%); }
+
+/* FACADE */
+.jp-facade {
+  position: relative;
+  width: min(900px, 92vw);
+  margin: 0 auto;
+  height: 220px;
+  background: linear-gradient(180deg, #1a120a 0%, #0e0c08 100%);
+  border-top: 4px solid #5c3d18;
+  box-shadow: 0 -6px 40px rgba(0,0,0,0.7), inset 0 2px 0 rgba(160,110,40,0.15);
+  z-index: 2;
+}
+
+/* Pillars */
+.jp-pillar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 22px;
+  background:
+    linear-gradient(90deg, #2e1e08 0%, #5a3c14 30%, #7a5520 50%, #5a3c14 70%, #2e1e08 100%);
+  border-left:  1px solid rgba(180,130,50,0.3);
+  border-right: 1px solid rgba(180,130,50,0.3);
+}
+.jp-pillar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0, transparent 18px,
+    rgba(0,0,0,0.12) 18px, rgba(0,0,0,0.12) 19px
+  );
+}
+.jp-pillar--l1 { left: 8%; }
+.jp-pillar--l2 { left: calc(8% + 36px); }
+.jp-pillar--r1 { right: calc(8% + 36px); }
+.jp-pillar--r2 { right: 8%; }
+
+/* Rail (noren rod) */
+.jp-rail {
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 10px;
+  background: linear-gradient(180deg, #7a5520 0%, #4a3010 50%, #7a5520 100%);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,210,100,0.2);
+  z-index: 4;
+}
+
+/* NOREN */
+.jp-noren {
+  position: absolute;
+  top: 10px;
+  left: 8%;
+  right: 8%;
+  height: 120px;
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.jp-noren-panel {
+  flex: 1;
+  border-radius: 0 0 6px 6px;
+  transform-origin: top center;
+  will-change: transform;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, #1a0e05 0%, #2e1a08 40%, #1a0e05 100%);
+  border: 1px solid rgba(180,130,50,0.22);
+  box-shadow: inset 2px 0 8px rgba(0,0,0,0.3), inset -2px 0 8px rgba(0,0,0,0.3);
+  transition: transform 0.18s cubic-bezier(0.22,1,0.36,1);
+}
+
+.jp-noren-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0, transparent 8px,
+      rgba(160,100,20,0.08) 8px, rgba(160,100,20,0.08) 9px
+    );
+  pointer-events: none;
+}
+
+/* Alternating indigo/deep-red noren colors */
+.jp-noren-panel:nth-child(odd)  { background: linear-gradient(180deg, #0a0e1c 0%, #12193a 50%, #0a0e1c 100%); }
+.jp-noren-panel:nth-child(even) { background: linear-gradient(180deg, #1c0a0a 0%, #3a1212 50%, #1c0a0a 100%); }
+
+.jp-noren-panel:nth-child(odd)::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(100,120,220,0.6), transparent);
+}
+.jp-noren-panel:nth-child(even)::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(200,60,60,0.6), transparent);
+}
+
+.jp-noren-kanji {
+  font-family: "Noto Serif JP", "Hiragino Mincho Pro", serif;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  color: rgba(220,200,150,0.82);
+  text-shadow: 0 0 14px rgba(220,180,80,0.5);
+  writing-mode: vertical-rl;
+  letter-spacing: 0.08em;
+  position: relative;
+  z-index: 1;
+}
+
+/* LANTERNS */
+.jp-lantern {
+  position: absolute;
+  top: -10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
+  animation: lanternSway 4s ease-in-out infinite;
+}
+.jp-lantern--l { left: calc(8% + 10px); animation-delay: -1.3s; }
+.jp-lantern--r { right: calc(8% + 10px); animation-delay: 0s; }
+
+.jp-lantern-top,
+.jp-lantern-bottom {
+  width: 8px; height: 8px;
+  background: #7a5520;
+  border-radius: 2px;
+}
+.jp-lantern-body {
+  width: 44px; height: 72px;
+  border-radius: 50% 50% 48% 48% / 30% 30% 70% 70%;
+  background:
+    radial-gradient(ellipse at 38% 36%, rgba(255,230,130,0.92), rgba(220,140,30,0.7) 48%, rgba(160,70,10,0.5) 80%);
+  border: 1.5px solid rgba(200,150,40,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 24px rgba(255,180,40,0.55),
+    0 0 60px rgba(255,140,20,0.25),
+    inset 0 0 16px rgba(255,220,80,0.3);
+}
+.jp-lantern-body span {
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: rgba(80,30,0,0.9);
+  writing-mode: vertical-rl;
+}
+.jp-lantern-glow {
+  position: absolute;
+  bottom: -8px;
+  width: 60px; height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,170,30,0.32), transparent 70%);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+@keyframes lanternSway {
+  0%, 100% { transform: rotate(-3deg); }
+  50%       { transform: rotate(3deg); }
+}
+
+/* GROUND */
+.jp-ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: linear-gradient(180deg, #0a0806 0%, #060504 100%);
+  border-top: 2px solid rgba(120,80,20,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jp-ground-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.jp-link {
+  color: rgba(200,170,100,0.82);
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+.jp-link:hover { color: #ffe07a; text-shadow: 0 0 12px rgba(255,200,60,0.5); }
+
+.jp-dot { color: rgba(200,170,100,0.4); }
+
+/* ── end Japanese House Scene ─── */
 
 .reveal {
   opacity: 0;
