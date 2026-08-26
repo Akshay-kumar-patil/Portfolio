@@ -146,12 +146,74 @@
       </div>
     </section>
 
+    <!-- Neural Activity Section -->
+    <section class="section neural-activity-section glass reveal" id="neural-activity-section">
+      <div class="section-heading">
+        <p class="eyebrow">Neural Activity</p>
+        <h3>Watch the network recognize what you draw</h3>
+      </div>
+
+      <div class="neural-app-container">
+        <!-- Left Panel: Drawing Canvas & Downsample Preview -->
+        <div class="neural-canvas-panel">
+          <div class="canvas-header">
+            <span class="canvas-label">DRAW A DIGIT (0-9)</span>
+            <button type="button" class="clear-btn" id="neural-clear-btn">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              Clear
+            </button>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="neural-draw-canvas" width="160" height="160"></canvas>
+          </div>
+          <div class="downsample-preview-box">
+            <div class="downsample-info">
+              <span class="downsample-label">Input Grid (12x12)</span>
+              <span class="downsample-sub">Normalized Tensor</span>
+            </div>
+            <canvas id="neural-downsample-canvas" width="48" height="48"></canvas>
+          </div>
+        </div>
+
+        <!-- Center Panel: Interactive Real-Time Neural Network Graph -->
+        <div class="neural-graph-panel">
+          <div class="graph-header">
+            <span>MULTILAYER PERCEPTRON GRAPH</span>
+            <span class="pulse-indicator"><span class="pulse-dot"></span> Live Computations</span>
+          </div>
+          <div class="graph-canvas-wrap" id="neural-graph-wrap">
+            <canvas id="neural-graph-canvas"></canvas>
+            <div class="neural-tooltip" id="neural-tooltip" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <!-- Right Panel: Output & Confidence Distribution -->
+        <div class="neural-output-panel">
+          <div class="output-prediction-card">
+            <span class="output-label">PREDICTION</span>
+            <div class="prediction-value" id="neural-pred-val">?</div>
+            <div class="confidence-badge" id="neural-conf-badge">0%</div>
+          </div>
+
+          <div class="probability-bars-wrap">
+            <span class="prob-title">CLASS PROBABILITIES</span>
+            <div class="prob-list" id="neural-prob-list">
+              <!-- Dynamically populated 0-9 probability bars -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section glass reveal">
       <div class="section-heading">
         <p class="eyebrow">Achievements</p>
         <h3>Wins and certifications</h3>
       </div>
-    <!-- Neural Matrix Fabric Section -->
+      <div class="badge-row" id="achievements-row"></div>
+    </section>
     <section class="section matrix-fabric-section glass reveal" id="matrix-section">
       <div class="matrix-header">
         <div class="matrix-title-group">
