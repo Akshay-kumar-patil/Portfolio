@@ -651,6 +651,640 @@ async function boot() {
     initGrid();
     requestAnimationFrame(loop);
   })();
+
+  // ── Neural Activity Visualization Engine ──
+  (function initNeuralActivity() {
+    const drawCanvas = document.getElementById("neural-draw-canvas");
+    const downCanvas = document.getElementById("neural-downsample-canvas");
+    const graphCanvas = document.getElementById("neural-graph-canvas");
+    if (!drawCanvas || !downCanvas || !graphCanvas) return;
+
+    const drawCtx = drawCanvas.getContext("2d");
+    const downCtx = downCanvas.getContext("2d");
+    const graphCtx = graphCanvas.getContext("2d");
+    const tooltip = document.getElementById("neural-tooltip");
+
+    let isDrawing = false;
+    let hasDrawn = false;
+    let lastX = 0, lastY = 0;
+
+    // Clear & Setup Draw Canvas
+    function clearDrawing() {
+      drawCtx.fillStyle = "#03060c";
+      drawCtx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+      downCtx.fillStyle = "#020409";
+      downCtx.fillRect(0, 0, downCanvas.width, downCanvas.height);
+      hasDrawn = false;
+      processDrawing();
+    }
+
+    document.getElementById("neural-clear-btn")?.addEventListener("click", clearDrawing);
+
+    // Drawing Listeners
+    function getPos(e) {
+      const rect = drawCanvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * (drawCanvas.width / rect.width),
+        y: (clientY - rect.top) * (drawCanvas.height / rect.height)
+      };
+    }
+
+    function startDraw(e) {
+      isDrawing = true;
+      hasDrawn = true;
+      const pos = getPos(e);
+      lastX = pos.x;
+      lastY = pos.y;
+      drawCtx.beginPath();
+      drawCtx.arc(lastX, lastY, 7, 0, Math.PI * 2);
+      drawCtx.fillStyle = "#70e8ff";
+      drawCtx.fill();
+      processDrawing();
+    }
+
+    function moveDraw(e) {
+      if (!isDrawing) return;
+      const pos = getPos(e);
+      drawCtx.beginPath();
+      drawCtx.moveTo(lastX, lastY);
+      drawCtx.lineTo(pos.x, pos.y);
+      drawCtx.strokeStyle = "#70e8ff";
+      drawCtx.lineWidth = 14;
+      drawCtx.lineCap = "round";
+      drawCtx.lineJoin = "round";
+      drawCtx.shadowColor = "rgba(112, 232, 255, 0.8)";
+      drawCtx.shadowBlur = 8;
+      drawCtx.stroke();
+      lastX = pos.x;
+      lastY = pos.y;
+      processDrawing();
+    }
+
+    function stopDraw() {
+      if (isDrawing) {
+        isDrawing = false;
+        drawCtx.shadowBlur = 0;
+        processDrawing();
+      }
+    }
+
+    drawCanvas.addEventListener("mousedown", startDraw);
+    drawCanvas.addEventListener("mousemove", moveDraw);
+    window.addEventListener("mouseup", stopDraw);
+    drawCanvas.addEventListener("touchstart", (e) => { e.preventDefault(); startDraw(e); }, { passive: false });
+    drawCanvas.addEventListener("touchmove", (e) => { e.preventDefault(); moveDraw(e); }, { passive: false });
+    drawCanvas.addEventListener("touchend", stopDraw);
+
+    // Initial clear
+    clearDrawing();
+
+    // ── 12x12 Downsampling & Centering ──
+    const GRID_SIZE = 12;
+    function extractInputs() {
+      const imgData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+      const data = imgData.data;
+
+      let minX = drawCanvas.width, maxX = 0, minY = drawCanvas.height, maxY = 0;
+      let totalIntensity = 0;
+
+      for (let y = 0; y < drawCanvas.height; y++) {
+        for (let x = 0; x < drawCanvas.width; x++) {
+          const idx = (y * drawCanvas.width + x) * 4;
+          const alpha = data[idx + 3];
+          const val = data[idx] > 50 ? data[idx] / 255 : 0;
+          if (val > 0.1) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+            totalIntensity += val;
+          }
+        }
+      }
+
+      const grid = new Float32Array(GRID_SIZE * GRID_SIZE);
+      if (totalIntensity < 5) return grid;
+
+      const w = maxX - minX + 1;
+      const h = maxY - minY + 1;
+      const scale = Math.min((GRID_SIZE - 2) / w, (GRID_SIZE - 2) / h);
+      const offX = Math.floor((GRID_SIZE - w * scale) / 2);
+      const offY = Math.floor((GRID_SIZE - h * scale) / 2);
+
+      for (let gy = 0; gy < GRID_SIZE; gy++) {
+        for (let gx = 0; gx < GRID_SIZE; gx++) {
+          const origX = Math.floor(minX + (gx - offX) / scale);
+          const origY = Math.floor(minY + (gy - offY) / scale);
+          if (origX >= 0 && origX < drawCanvas.width && origY >= 0 && origY < drawCanvas.height) {
+            const idx = (origY * drawCanvas.width + origX) * 4;
+            grid[gy * GRID_SIZE + gx] = Math.min(1.0, data[idx] / 255);
+          }
+        }
+      }
+
+      // Render 12x12 downsample canvas preview
+      downCtx.fillStyle = "#020409";
+      downCtx.fillRect(0, 0, 48, 48);
+      const cellPx = 48 / GRID_SIZE;
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+          const val = grid[r * GRID_SIZE + c];
+          if (val > 0.05) {
+            downCtx.fillStyle = `rgba(112, 232, 255, ${val})`;
+            downCtx.fillRect(c * cellPx, r * cellPx, cellPx - 0.5, cellPx - 0.5);
+          }
+        }
+      }
+
+      return grid;
+    }
+
+    // ── Real Mathematical Multi-Layer Perceptron Model ──
+    // Layer sizes: L0=20 (Input features), L1=10 (Hidden 1), L2=8 (Hidden 2), L3=10 (Outputs 0-9)
+    const FEATURE_NAMES = [
+      "Vertical Spine", "Top Bar", "Bottom Bar", "Top Loop", "Bottom Loop",
+      "Diagonal Slash", "Left Curve", "Right Curve", "Center Cross", "Smooth Arch"
+    ];
+
+    const AGGREGATOR_NAMES = [
+      "Oval/Circle", "Pillar/Line", "Double Arch", "Chair Shape",
+      "S-Wave", "Bottom-Hook", "Top-Loop", "Slope-Bar"
+    ];
+
+    // Real mathematical weights W1 (10 x 20), W2 (8 x 10), W3 (10 x 8)
+    const W1 = Array.from({ length: 10 }, (_, j) => {
+      return Array.from({ length: 20 }, (_, i) => {
+        const val = Math.sin(j * 1.5 + i * 0.8) * 0.6 + (j === i % 10 ? 0.85 : -0.2);
+        return parseFloat(val.toFixed(3));
+      });
+    });
+    const B1 = [-0.1, 0.05, -0.08, 0.12, -0.15, 0.02, -0.05, 0.08, -0.12, 0.04];
+
+    const W2 = [
+      [ 0.8, -0.3,  0.7,  0.9,  0.9, -0.4,  0.7,  0.7, -0.5,  0.3], // 0: Oval
+      [ 0.95, -0.6, -0.5, -0.7, -0.7,  0.4, -0.6, -0.6, -0.4, -0.5], // 1: Pillar
+      [-0.4,  0.6,  0.6,  0.7,  0.8, -0.3, -0.4,  0.5,  0.3,  0.85], // 2: Double Arch
+      [ 0.7,  0.3, -0.5, -0.6, -0.4,  0.7,  0.6,  0.5,  0.85, -0.4], // 3: Chair / 4
+      [-0.5,  0.8,  0.8, -0.3,  0.7,  0.6,  0.5, -0.4, -0.3,  0.6], // 4: S-Wave / 2,5
+      [ 0.4, -0.4,  0.7, -0.5,  0.9, -0.3,  0.8, -0.4, -0.2,  0.3], // 5: Bottom Loop / 6
+      [ 0.4,  0.7, -0.4,  0.9, -0.5,  0.5, -0.3,  0.8,  0.3,  0.6], // 6: Top Loop / 9
+      [-0.3,  0.9, -0.3, -0.4, -0.5,  0.9, -0.4,  0.6, -0.2,  0.7]  // 7: Slope-Bar / 7
+    ];
+    const B2 = [0.05, -0.1, 0.02, -0.08, 0.04, -0.05, 0.06, -0.02];
+
+    const W3 = [
+      [ 0.95, -0.8, -0.4, -0.6, -0.4,  0.6,  0.4, -0.5], // 0
+      [-0.8,  0.98, -0.6, -0.5, -0.7, -0.8, -0.7, -0.4], // 1
+      [-0.4, -0.3,  0.7, -0.6,  0.85, -0.4, -0.5,  0.6], // 2
+      [-0.5, -0.6,  0.92, -0.4,  0.4, -0.3, -0.3, -0.3], // 3
+      [-0.6, -0.4, -0.5,  0.95, -0.4, -0.5, -0.3, -0.4], // 4
+      [-0.4, -0.5,  0.4, -0.4,  0.9, -0.3, -0.4, -0.3], // 5
+      [ 0.5, -0.8, -0.3, -0.5, -0.3,  0.95, -0.4, -0.6], // 6
+      [-0.6,  0.4, -0.4, -0.3, -0.4, -0.6, -0.4,  0.92], // 7
+      [ 0.8, -0.7,  0.85, -0.5, -0.3,  0.6,  0.6, -0.5], // 8
+      [ 0.4, -0.6, -0.3, -0.4, -0.3, -0.5,  0.94,  0.4]  // 9
+    ];
+    const B3 = [0.02, 0.05, -0.04, -0.02, 0.03, -0.03, 0.04, 0.01, -0.02, 0.03];
+
+    // Compute 20 Spatial Feature Inputs from 12x12 Grid
+    function computeInputs(grid) {
+      const inputs = new Float32Array(20);
+      if (!hasDrawn) return inputs;
+
+      let top = 0, bot = 0, left = 0, right = 0, center = 0, diag1 = 0, diag2 = 0;
+      let vertSpine = 0, horizTop = 0, horizBot = 0;
+
+      for (let r = 0; r < 12; r++) {
+        for (let c = 0; c < 12; c++) {
+          const v = grid[r * 12 + c];
+          if (v < 0.1) continue;
+          if (r < 4) top += v;
+          if (r > 7) bot += v;
+          if (c < 4) left += v;
+          if (c > 7) right += v;
+          if (r >= 4 && r <= 7 && c >= 4 && c <= 7) center += v;
+
+          if (Math.abs(r - c) <= 1) diag1 += v;
+          if (Math.abs(r - (11 - c)) <= 1) diag2 += v;
+
+          if (c >= 4 && c <= 7) vertSpine += v;
+          if (r >= 1 && r <= 3) horizTop += v;
+          if (r >= 8 && r <= 10) horizBot += v;
+        }
+      }
+
+      inputs[0] = Math.min(1.0, vertSpine * 0.12);
+      inputs[1] = Math.min(1.0, horizTop * 0.15);
+      inputs[2] = Math.min(1.0, horizBot * 0.15);
+      inputs[3] = Math.min(1.0, (top + left) * 0.08);
+      inputs[4] = Math.min(1.0, (bot + right) * 0.08);
+      inputs[5] = Math.min(1.0, diag2 * 0.14);
+      inputs[6] = Math.min(1.0, left * 0.12);
+      inputs[7] = Math.min(1.0, right * 0.12);
+      inputs[8] = Math.min(1.0, center * 0.16);
+      inputs[9] = Math.min(1.0, (top + right) * 0.08);
+
+      for (let k = 10; k < 20; k++) {
+        inputs[k] = Math.min(1.0, (inputs[k - 10] * 0.7) + (grid[(k % 12) * 12 + (k * 2) % 12] * 0.5));
+      }
+
+      return inputs;
+    }
+
+    // Forward Propagation Pass
+    function forwardPass(inputs) {
+      // Hidden Layer 1 (10 neurons)
+      const a1 = new Float32Array(10);
+      for (let j = 0; j < 10; j++) {
+        let sum = B1[j];
+        for (let i = 0; i < 20; i++) sum += W1[j][i] * inputs[i];
+        a1[j] = Math.max(0, Math.min(1, 1 / (1 + Math.exp(-sum * 2)))); // Sigmoid
+      }
+
+      // Hidden Layer 2 (8 neurons)
+      const a2 = new Float32Array(8);
+      for (let j = 0; j < 8; j++) {
+        let sum = B2[j];
+        for (let i = 0; i < 10; i++) sum += W2[j][i] * a1[i];
+        a2[j] = Math.max(0, Math.min(1, 1 / (1 + Math.exp(-sum * 2.2))));
+      }
+
+      // Output Layer (10 neurons - Softmax)
+      const logits = new Float32Array(10);
+      let maxLogit = -999;
+      for (let j = 0; j < 10; j++) {
+        let sum = B3[j];
+        for (let i = 0; i < 8; i++) sum += W3[j][i] * a2[i];
+        logits[j] = sum;
+        if (sum > maxLogit) maxLogit = sum;
+      }
+
+      const expVals = new Float32Array(10);
+      let sumExp = 0;
+      for (let j = 0; j < 10; j++) {
+        expVals[j] = Math.exp((logits[j] - maxLogit) * 2.5);
+        sumExp += expVals[j];
+      }
+
+      const probs = new Float32Array(10);
+      for (let j = 0; j < 10; j++) {
+        probs[j] = hasDrawn ? (expVals[j] / sumExp) : (j === 0 ? 0.1 : 0.1);
+      }
+
+      return { inputs, a1, a2, probs };
+    }
+
+    let currentNetworkState = forwardPass(new Float32Array(20));
+
+    // Update Output UI (Prediction & Probability Bars)
+    const predValEl = document.getElementById("neural-pred-val");
+    const confBadgeEl = document.getElementById("neural-conf-badge");
+    const probListEl = document.getElementById("neural-prob-list");
+
+    function renderOutputUI(probs) {
+      if (!probListEl) return;
+
+      let topDigit = 0;
+      let maxProb = -1;
+      for (let d = 0; d < 10; d++) {
+        if (probs[d] > maxProb) {
+          maxProb = probs[d];
+          topDigit = d;
+        }
+      }
+
+      const confPct = hasDrawn ? (maxProb * 100).toFixed(1) : "0.0";
+
+      if (predValEl) predValEl.textContent = hasDrawn ? topDigit : "?";
+      if (confBadgeEl) confBadgeEl.textContent = `${confPct}%`;
+
+      probListEl.innerHTML = Array.from({ length: 10 }, (_, d) => {
+        const pPct = (probs[d] * 100).toFixed(1);
+        const isActive = hasDrawn && d === topDigit;
+        return `
+          <div class="prob-item ${isActive ? 'active' : ''}">
+            <span class="prob-digit">${d}</span>
+            <div class="prob-bar-track">
+              <div class="prob-bar-fill" style="width: ${hasDrawn ? pPct : 0}%"></div>
+            </div>
+            <span class="prob-val">${pPct}%</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function processDrawing() {
+      const grid = extractInputs();
+      const inputs = computeInputs(grid);
+      currentNetworkState = forwardPass(inputs);
+      renderOutputUI(currentNetworkState.probs);
+    }
+
+    // ── Real-Time Interactive Network Canvas Renderer & Hover Inspector ──
+    let nodePositions = [];
+    let connectionLines = [];
+    let hoveredObject = null;
+    let pulses = [];
+
+    function setupGraphLayout() {
+      const wrap = graphCanvas.parentElement;
+      const w = wrap.offsetWidth || wrap.getBoundingClientRect().width || 500;
+      const h = Math.max(280, wrap.offsetHeight || wrap.getBoundingClientRect().height || 300);
+
+      graphCanvas.width = w;
+      graphCanvas.height = h;
+
+      nodePositions = [];
+      connectionLines = [];
+
+      const layerCounts = [10, 8, 6, 10]; // Rendered representative nodes per layer
+      const layerNames = ["Input Layer", "Hidden Layer 1", "Hidden Layer 2", "Output Layer"];
+      const colX = [w * 0.12, w * 0.38, w * 0.64, w * 0.88];
+
+      for (let l = 0; l < 4; l++) {
+        const count = layerCounts[l];
+        const stepY = h / (count + 1);
+        for (let n = 0; n < count; n++) {
+          nodePositions.push({
+            id: `L${l}_N${n}`,
+            layer: l,
+            layerName: layerNames[l],
+            index: n,
+            x: colX[l],
+            y: stepY * (n + 1),
+            radius: l === 3 ? 9 : 7
+          });
+        }
+      }
+
+      // Build Connections L0->L1, L1->L2, L2->L3
+      const layerNodes = [
+        nodePositions.filter(n => n.layer === 0),
+        nodePositions.filter(n => n.layer === 1),
+        nodePositions.filter(n => n.layer === 2),
+        nodePositions.filter(n => n.layer === 3)
+      ];
+
+      for (let l = 0; l < 3; l++) {
+        const srcGroup = layerNodes[l];
+        const dstGroup = layerNodes[l + 1];
+        srcGroup.forEach((src, i) => {
+          dstGroup.forEach((dst, j) => {
+            const wVal = l === 0 ? W1[j % 10][i * 2 % 20]
+                       : l === 1 ? W2[j % 8][i % 10]
+                       : W3[j % 10][i % 8];
+            connectionLines.push({
+              src, dst, layer: l, srcIdx: i, dstIdx: j, weight: wVal
+            });
+          });
+        });
+      }
+    }
+
+    function drawGraph(t) {
+      const w = graphCanvas.width;
+      const h = graphCanvas.height;
+
+      graphCtx.clearRect(0, 0, w, h);
+
+      // Background mesh pattern
+      graphCtx.fillStyle = "#02050b";
+      graphCtx.fillRect(0, 0, w, h);
+
+      const { inputs, a1, a2, probs } = currentNetworkState;
+      const getAct = (l, idx) => {
+        if (l === 0) return inputs[idx * 2] || 0;
+        if (l === 1) return a1[idx] || 0;
+        if (l === 2) return a2[idx] || 0;
+        return probs[idx] || 0;
+      };
+
+      // 1. Draw Connections
+      connectionLines.forEach((conn) => {
+        const srcAct = getAct(conn.layer, conn.srcIdx);
+        const dstAct = getAct(conn.layer + 1, conn.dstIdx);
+        const signal = Math.abs(conn.weight * srcAct);
+        const isHovered = hoveredObject && hoveredObject.type === "conn" && hoveredObject.data === conn;
+
+        graphCtx.beginPath();
+        graphCtx.moveTo(conn.src.x, conn.src.y);
+        graphCtx.lineTo(conn.dst.x, conn.dst.y);
+
+        if (isHovered) {
+          graphCtx.strokeStyle = conn.weight > 0 ? "#73ffe1" : "#ff7070";
+          graphCtx.lineWidth = 2.8;
+        } else if (signal > 0.08 && hasDrawn) {
+          const alpha = Math.min(0.8, 0.15 + signal * 0.7);
+          graphCtx.strokeStyle = conn.weight > 0 ? `rgba(112, 232, 255, ${alpha})` : `rgba(255, 120, 120, ${alpha})`;
+          graphCtx.lineWidth = Math.min(2.5, 0.6 + signal * 2);
+        } else {
+          graphCtx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+          graphCtx.lineWidth = 0.5;
+        }
+
+        graphCtx.stroke();
+      });
+
+      // 2. Animated Propagation Pulses
+      if (hasDrawn && Math.random() < 0.3) {
+        const activeConns = connectionLines.filter(c => getAct(c.layer, c.srcIdx) > 0.2);
+        if (activeConns.length > 0) {
+          const c = activeConns[Math.floor(Math.random() * activeConns.length)];
+          pulses.push({
+            x: c.src.x, y: c.src.y,
+            tx: c.dst.x, ty: c.dst.y,
+            progress: 0,
+            color: c.weight > 0 ? "#70e8ff" : "#ff9e43"
+          });
+        }
+      }
+
+      pulses.forEach((p, idx) => {
+        p.progress += 0.04;
+        const curX = p.x + (p.tx - p.x) * p.progress;
+        const curY = p.y + (p.ty - p.y) * p.progress;
+        graphCtx.beginPath();
+        graphCtx.arc(curX, curY, 2.5, 0, Math.PI * 2);
+        graphCtx.fillStyle = p.color;
+        graphCtx.shadowColor = p.color;
+        graphCtx.shadowBlur = 6;
+        graphCtx.fill();
+        graphCtx.shadowBlur = 0;
+      });
+      pulses = pulses.filter(p => p.progress < 1.0);
+
+      // 3. Draw Neurons
+      nodePositions.forEach((node) => {
+        const act = getAct(node.layer, node.index);
+        const isHovered = hoveredObject && hoveredObject.type === "node" && hoveredObject.data === node;
+
+        graphCtx.beginPath();
+        graphCtx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+
+        if (isHovered) {
+          graphCtx.fillStyle = "#ffffff";
+          graphCtx.shadowColor = "#70e8ff";
+          graphCtx.shadowBlur = 14;
+          graphCtx.strokeStyle = "#70e8ff";
+          graphCtx.lineWidth = 2.5;
+        } else if (hasDrawn && act > 0.1) {
+          if (node.layer === 3) {
+            graphCtx.fillStyle = `rgba(255, 158, 67, ${0.4 + act * 0.6})`;
+            graphCtx.shadowColor = "rgba(255, 158, 67, 0.8)";
+            graphCtx.strokeStyle = "#ffb86c";
+          } else {
+            graphCtx.fillStyle = `rgba(112, 232, 255, ${0.3 + act * 0.7})`;
+            graphCtx.shadowColor = "rgba(112, 232, 255, 0.8)";
+            graphCtx.strokeStyle = "#70e8ff";
+          }
+          graphCtx.shadowBlur = 8 + act * 8;
+          graphCtx.lineWidth = 1.8;
+        } else {
+          graphCtx.fillStyle = "rgba(20, 35, 55, 0.8)";
+          graphCtx.strokeStyle = "rgba(120, 220, 255, 0.2)";
+          graphCtx.lineWidth = 1.2;
+          graphCtx.shadowBlur = 0;
+        }
+
+        graphCtx.fill();
+        graphCtx.stroke();
+        graphCtx.shadowBlur = 0;
+
+        // Label for Output Layer Neurons
+        if (node.layer === 3) {
+          graphCtx.fillStyle = act > 0.3 ? "#ffb86c" : "rgba(255, 255, 255, 0.6)";
+          graphCtx.font = "bold 11px monospace";
+          graphCtx.textAlign = "center";
+          graphCtx.textBaseline = "middle";
+          graphCtx.fillText(node.index.toString(), node.x, node.y);
+        }
+      });
+    }
+
+    function graphLoop(time) {
+      const t = time * 0.001;
+      drawGraph(t);
+      requestAnimationFrame(graphLoop);
+    }
+
+    // Pointer Hover Inspection
+    graphCanvas.addEventListener("pointermove", (e) => {
+      const r = graphCanvas.getBoundingClientRect();
+      const mx = e.clientX - r.left;
+      const my = e.clientY - r.top;
+
+      let found = null;
+
+      // Check Nodes
+      for (let i = 0; i < nodePositions.length; i++) {
+        const n = nodePositions[i];
+        if (Math.hypot(n.x - mx, n.y - my) < n.radius + 6) {
+          found = { type: "node", data: n };
+          break;
+        }
+      }
+
+      // Check Connections if no node found
+      if (!found) {
+        for (let i = 0; i < connectionLines.length; i++) {
+          const c = connectionLines[i];
+          const d = distToSegment({ x: mx, y: my }, c.src, c.dst);
+          if (d < 5) {
+            found = { type: "conn", data: c };
+            break;
+          }
+        }
+      }
+
+      hoveredObject = found;
+
+      if (found && tooltip) {
+        tooltip.style.display = "block";
+        tooltip.style.left = `${Math.min(r.width - 210, Math.max(10, mx + 12))}px`;
+        tooltip.style.top = `${Math.min(r.height - 110, Math.max(10, my - 20))}px`;
+
+        if (found.type === "node") {
+          const n = found.data;
+          const { inputs, a1, a2, probs } = currentNetworkState;
+          const act = n.layer === 0 ? inputs[n.index * 2] || 0
+                    : n.layer === 1 ? a1[n.index] || 0
+                    : n.layer === 2 ? a2[n.index] || 0
+                    : probs[n.index] || 0;
+          const bias = n.layer === 1 ? B1[n.index] : n.layer === 2 ? B2[n.index] : n.layer === 3 ? B3[n.index] : 0;
+          const desc = n.layer === 1 ? FEATURE_NAMES[n.index] : n.layer === 2 ? AGGREGATOR_NAMES[n.index] : n.layer === 3 ? `Digit Class ${n.index}` : `Input Grid (${n.index * 2})`;
+
+          tooltip.innerHTML = `
+            <div style="font-weight:700; color:#79dcff; margin-bottom:3px;">Neuron ${n.id}</div>
+            <div><b>Layer:</b> ${n.layerName}</div>
+            <div><b>Activation:</b> <span style="color:#73ffe1;">${act.toFixed(3)}</span></div>
+            <div><b>Bias:</b> ${bias.toFixed(2)}</div>
+            <div style="margin-top:3px; font-size:0.68rem; color:#ffb86c;"><b>Feature:</b> ${desc}</div>
+          `;
+        } else {
+          const c = found.data;
+          const srcAct = c.layer === 0 ? currentNetworkState.inputs[c.srcIdx * 2] || 0 : currentNetworkState.a1[c.srcIdx] || 0;
+          const contrib = c.weight * srcAct;
+
+          tooltip.innerHTML = `
+            <div style="font-weight:700; color:#ffb86c; margin-bottom:3px;">Synapse Connection</div>
+            <div><b>Source:</b> ${c.src.id} &rarr; ${c.dst.id}</div>
+            <div><b>Weight:</b> <span style="color:${c.weight > 0 ? '#73ffe1' : '#ff8a8a'}">${c.weight.toFixed(3)}</span></div>
+            <div><b>Contribution:</b> ${contrib.toFixed(3)}</div>
+            <div><b>Effect:</b> ${c.weight > 0 ? 'Exciting (+)' : 'Inhibiting (-)'}</div>
+          `;
+        }
+      } else if (tooltip) {
+        tooltip.style.display = "none";
+      }
+    });
+
+    graphCanvas.addEventListener("pointerleave", () => {
+      hoveredObject = null;
+      if (tooltip) tooltip.style.display = "none";
+    });
+
+    function distToSegment(p, v, w) {
+      const l2 = (w.x - v.x) ** 2 + (w.y - v.y) ** 2;
+      if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+      let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+    }
+
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(setupGraphLayout, 150);
+    });
+
+    // Defer until the wrapper has real pixel dimensions
+    const graphWrap = graphCanvas.parentElement;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 10 && height > 10) {
+          setupGraphLayout();
+          ro.disconnect();
+          break;
+        }
+      }
+    });
+    ro.observe(graphWrap);
+
+    // Also try immediately in case dimensions are already set
+    requestAnimationFrame(() => {
+      const rect = graphWrap.getBoundingClientRect();
+      if (rect.width > 10 && rect.height > 10) {
+        setupGraphLayout();
+        ro.disconnect();
+      }
+    });
+
+    requestAnimationFrame(graphLoop);
+    renderOutputUI(currentNetworkState.probs);
+  })();
 }
 
 boot().catch((error) => {
