@@ -673,193 +673,233 @@ async function boot() {
     let hasDrawn = false;
     let lastX = 0, lastY = 0;
 
-    // ── Neural Model Weights & Metadata ──
+    // ── Digit Template Classifier (Cosine Similarity) ──
     const FEATURE_NAMES = [
-      "Vertical Spine", "Top Bar", "Bottom Bar", "Top Loop", "Bottom Loop",
-      "Diagonal Slash", "Left Curve", "Right Curve", "Center Cross", "Smooth Arch"
+      "Top Region", "Upper-Mid Region", "Lower-Mid Region", "Bottom Region",
+      "Left Edge", "Right Edge", "Center Mass", "Top-Left Quad",
+      "Top-Right Quad", "Bottom-Left Quad"
     ];
-
     const AGGREGATOR_NAMES = [
-      "Oval/Circle", "Pillar/Line", "Double Arch", "Chair Shape",
-      "S-Wave", "Bottom-Hook", "Top-Loop", "Slope-Bar"
+      "Loop Detector", "Line Detector", "Curve Detector", "Cross Detector",
+      "Arc Detector", "Diagonal Detector", "Corner Detector", "Density"
     ];
 
-    const W1 = Array.from({ length: 10 }, (_, j) => {
-      return Array.from({ length: 20 }, (_, i) => {
-        const val = Math.sin(j * 1.5 + i * 0.8) * 0.6 + (j === i % 10 ? 0.85 : -0.2);
-        return parseFloat(val.toFixed(3));
-      });
+    // 10 hand-designed 12x12 digit templates (row-major, '1'=ink, each exactly 144 chars)
+    const T = [
+      "001111110000011000011000110000001100110000001100110000001100110000001100110000001100110000001100110000001100110000001100011000011000001111110000",
+      "000011000000000111000000001111000000000011000000000011000000000011000000000011000000000011000000000011000000000011000000001111110000001111110000",
+      "001111110000011000011000000000001100000000001100000000011000000000110000000011000000000110000000001100000000011000000000111111111111111111111111",
+      "001111110000011000011000000000001100000000001100000011110000000011110000000000001100000000001100000000001100010000001100011000011000001111110000",
+      "000000110000000001110000000011110000000110110000001100110000011000110000110000110000111111111111111111111111000000110000000000110000000000110000",
+      "111111111100110000000000110000000000110000000000111111110000000000111000000000001100000000001100000000001100010000001100011000011000001111110000",
+      "001111110000011000110000110000000000110000000000111111110000110000011000110000001100110000001100110000001100110000001100011000011000001111110000",
+      "111111111111111111111111000000000011000000000110000000001100000000011000000000110000000001100000000001100000000011000000000011000000000011000000",
+      "001111110000011000011000110000001100110000001100011000011000001111110000011000011000110000001100110000001100110000001100011000011000001111110000",
+      "001111110000011000011000110000001100110000001100110000001100011000011000001111111100000000001100000000001100000000011000000000110000001111100000"
+    ];
+
+    // Parse templates into Float32Arrays
+    const TEMPLATES = T.map(s => {
+      const arr = new Float32Array(144);
+      for (let i = 0; i < 144 && i < s.length; i++) arr[i] = s[i] === '1' ? 1.0 : 0.0;
+      return arr;
     });
-    const B1 = [-0.1, 0.05, -0.08, 0.12, -0.15, 0.02, -0.05, 0.08, -0.12, 0.04];
 
-    const W2 = [
-      [ 0.8, -0.3,  0.7,  0.9,  0.9, -0.4,  0.7,  0.7, -0.5,  0.3],
-      [ 0.95, -0.6, -0.5, -0.7, -0.7,  0.4, -0.6, -0.6, -0.4, -0.5],
-      [-0.4,  0.6,  0.6,  0.7,  0.8, -0.3, -0.4,  0.5,  0.3,  0.85],
-      [ 0.7,  0.3, -0.5, -0.6, -0.4,  0.7,  0.6,  0.5,  0.85, -0.4],
-      [-0.5,  0.8,  0.8, -0.3,  0.7,  0.6,  0.5, -0.4, -0.3,  0.6],
-      [ 0.4, -0.4,  0.7, -0.5,  0.9, -0.3,  0.8, -0.4, -0.2,  0.3],
-      [ 0.4,  0.7, -0.4,  0.9, -0.5,  0.5, -0.3,  0.8,  0.3,  0.6],
-      [-0.3,  0.9, -0.3, -0.4, -0.5,  0.9, -0.4,  0.6, -0.2,  0.7]
-    ];
-    const B2 = [0.05, -0.1, 0.02, -0.08, 0.04, -0.05, 0.06, -0.02];
+    // Multiple shifted/scaled variants per digit for robustness
+    function shiftGrid(src, dx, dy) {
+      const out = new Float32Array(144);
+      for (let r = 0; r < 12; r++) {
+        for (let c = 0; c < 12; c++) {
+          const sr = r - dy, sc = c - dx;
+          if (sr >= 0 && sr < 12 && sc >= 0 && sc < 12) out[r * 12 + c] = src[sr * 12 + sc];
+        }
+      }
+      return out;
+    }
 
-    const W3 = [
-      [ 0.95, -0.8, -0.4, -0.6, -0.4,  0.6,  0.4, -0.5],
-      [-0.8,  0.98, -0.6, -0.5, -0.7, -0.8, -0.7, -0.4],
-      [-0.4, -0.3,  0.7, -0.6,  0.85, -0.4, -0.5,  0.6],
-      [-0.5, -0.6,  0.92, -0.4,  0.4, -0.3, -0.3, -0.3],
-      [-0.6, -0.4, -0.5,  0.95, -0.4, -0.5, -0.3, -0.4],
-      [-0.4, -0.5,  0.4, -0.4,  0.9, -0.3, -0.4, -0.3],
-      [ 0.5, -0.8, -0.3, -0.5, -0.3,  0.95, -0.4, -0.6],
-      [-0.6,  0.4, -0.4, -0.3, -0.4, -0.6, -0.4,  0.92],
-      [ 0.8, -0.7,  0.85, -0.5, -0.3,  0.6,  0.6, -0.5],
-      [ 0.4, -0.6, -0.3, -0.4, -0.3, -0.5,  0.94,  0.4]
-    ];
-    const B3 = [0.02, 0.05, -0.04, -0.02, 0.03, -0.03, 0.04, 0.01, -0.02, 0.03];
-
-    // Helper functions
+    // Downsample drawing to 12x12 using canvas for proper anti-aliased scaling
     function extractInputs() {
-      const imgData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+      const cw = drawCanvas.width, ch = drawCanvas.height;
+      const imgData = drawCtx.getImageData(0, 0, cw, ch);
       const data = imgData.data;
 
-      let minX = drawCanvas.width, maxX = 0, minY = drawCanvas.height, maxY = 0;
-      let totalIntensity = 0;
-
-      for (let y = 0; y < drawCanvas.height; y++) {
-        for (let x = 0; x < drawCanvas.width; x++) {
-          const idx = (y * drawCanvas.width + x) * 4;
-          const val = data[idx] > 50 ? data[idx] / 255 : 0;
-          if (val > 0.1) {
+      // Find bounding box of drawn content
+      let minX = cw, maxX = 0, minY = ch, maxY = 0;
+      let hasContent = false;
+      for (let y = 0; y < ch; y++) {
+        for (let x = 0; x < cw; x++) {
+          if (data[(y * cw + x) * 4] > 30) {
             if (x < minX) minX = x;
             if (x > maxX) maxX = x;
             if (y < minY) minY = y;
             if (y > maxY) maxY = y;
-            totalIntensity += val;
+            hasContent = true;
           }
         }
       }
 
-      const grid = new Float32Array(GRID_SIZE * GRID_SIZE);
-      if (totalIntensity < 5) return grid;
+      const grid = new Float32Array(144);
+      if (!hasContent) { renderDownsample(grid); return grid; }
 
-      const w = maxX - minX + 1;
-      const h = maxY - minY + 1;
-      const scale = Math.min((GRID_SIZE - 2) / w, (GRID_SIZE - 2) / h);
-      const offX = Math.floor((GRID_SIZE - w * scale) / 2);
-      const offY = Math.floor((GRID_SIZE - h * scale) / 2);
+      // Pad bounding box
+      const pad = 12;
+      minX = Math.max(0, minX - pad);
+      maxX = Math.min(cw - 1, maxX + pad);
+      minY = Math.max(0, minY - pad);
+      maxY = Math.min(ch - 1, maxY + pad);
 
-      for (let gy = 0; gy < GRID_SIZE; gy++) {
-        for (let gx = 0; gx < GRID_SIZE; gx++) {
-          const origX = Math.floor(minX + (gx - offX) / scale);
-          const origY = Math.floor(minY + (gy - offY) / scale);
-          if (origX >= 0 && origX < drawCanvas.width && origY >= 0 && origY < drawCanvas.height) {
-            const idx = (origY * drawCanvas.width + origX) * 4;
-            grid[gy * GRID_SIZE + gx] = Math.min(1.0, data[idx] / 255);
-          }
-        }
-      }
+      // Make square crop centered on content
+      const bw = maxX - minX + 1, bh = maxY - minY + 1;
+      const size = Math.max(bw, bh);
+      const cx = minX + bw / 2, cy = minY + bh / 2;
+      const srcX = cx - size / 2, srcY = cy - size / 2;
 
-      downCtx.fillStyle = "#020409";
-      downCtx.fillRect(0, 0, 48, 48);
-      const cellPx = 48 / GRID_SIZE;
-      for (let r = 0; r < GRID_SIZE; r++) {
-        for (let c = 0; c < GRID_SIZE; c++) {
-          const val = grid[r * GRID_SIZE + c];
-          if (val > 0.05) {
-            downCtx.fillStyle = `rgba(112, 232, 255, ${val})`;
-            downCtx.fillRect(c * cellPx, r * cellPx, cellPx - 0.5, cellPx - 0.5);
-          }
-        }
-      }
+      // Use a temp canvas for proper bilinear downsampling
+      const tmp = document.createElement("canvas");
+      tmp.width = 12; tmp.height = 12;
+      const tc = tmp.getContext("2d");
+      tc.fillStyle = "#000";
+      tc.fillRect(0, 0, 12, 12);
+      tc.imageSmoothingEnabled = true;
+      tc.imageSmoothingQuality = "medium";
+      tc.drawImage(drawCanvas, srcX, srcY, size, size, 1, 1, 10, 10);
 
+      const outData = tc.getImageData(0, 0, 12, 12).data;
+      for (let i = 0; i < 144; i++) grid[i] = Math.min(1.0, outData[i * 4] / 200);
+
+      renderDownsample(grid);
       return grid;
     }
 
-    function computeInputs(grid) {
-      const inputs = new Float32Array(20);
-      if (!hasDrawn) return inputs;
+    function renderDownsample(grid) {
+      downCtx.fillStyle = "#020409";
+      downCtx.fillRect(0, 0, 48, 48);
+      const px = 4;
+      for (let r = 0; r < 12; r++) {
+        for (let c = 0; c < 12; c++) {
+          const v = grid[r * 12 + c];
+          if (v > 0.03) {
+            downCtx.fillStyle = `rgba(112, 232, 255, ${v})`;
+            downCtx.fillRect(c * px, r * px, px - 0.5, px - 0.5);
+          }
+        }
+      }
+    }
 
-      let top = 0, bot = 0, left = 0, right = 0, center = 0, diag1 = 0, diag2 = 0;
-      let vertSpine = 0, horizTop = 0, horizBot = 0;
+    // Cosine similarity between two vectors
+    function cosineSim(a, b) {
+      let dot = 0, na = 0, nb = 0;
+      for (let i = 0; i < a.length; i++) {
+        dot += a[i] * b[i];
+        na += a[i] * a[i];
+        nb += b[i] * b[i];
+      }
+      return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-8);
+    }
+
+    // Classify by matching against templates with position tolerance
+    function classify(grid) {
+      const similarities = new Float32Array(10);
+
+      for (let d = 0; d < 10; d++) {
+        let best = -1;
+        // Test original + small shifts for position tolerance
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const shifted = (dx === 0 && dy === 0) ? grid : shiftGrid(grid, dx, dy);
+            const sim = cosineSim(shifted, TEMPLATES[d]);
+            if (sim > best) best = sim;
+          }
+        }
+        similarities[d] = best;
+      }
+      return similarities;
+    }
+
+    // Compute spatial features for visualization (10 features for hidden layer 1)
+    function computeFeatures(grid) {
+      const feats = new Float32Array(10);
+      if (!hasDrawn) return feats;
+
+      let topR = 0, upMid = 0, loMid = 0, botR = 0;
+      let leftE = 0, rightE = 0, centerM = 0;
+      let tl = 0, tr = 0, bl = 0;
 
       for (let r = 0; r < 12; r++) {
         for (let c = 0; c < 12; c++) {
           const v = grid[r * 12 + c];
-          if (v < 0.1) continue;
-          if (r < 4) top += v;
-          if (r > 7) bot += v;
-          if (c < 4) left += v;
-          if (c > 7) right += v;
-          if (r >= 4 && r <= 7 && c >= 4 && c <= 7) center += v;
-
-          if (Math.abs(r - c) <= 1) diag1 += v;
-          if (Math.abs(r - (11 - c)) <= 1) diag2 += v;
-
-          if (c >= 4 && c <= 7) vertSpine += v;
-          if (r >= 1 && r <= 3) horizTop += v;
-          if (r >= 8 && r <= 10) horizBot += v;
+          if (v < 0.05) continue;
+          if (r < 3) topR += v;
+          if (r >= 3 && r < 6) upMid += v;
+          if (r >= 6 && r < 9) loMid += v;
+          if (r >= 9) botR += v;
+          if (c < 4) leftE += v;
+          if (c >= 8) rightE += v;
+          if (r >= 3 && r < 9 && c >= 3 && c < 9) centerM += v;
+          if (r < 6 && c < 6) tl += v;
+          if (r < 6 && c >= 6) tr += v;
+          if (r >= 6 && c < 6) bl += v;
         }
       }
-
-      inputs[0] = Math.min(1.0, vertSpine * 0.12);
-      inputs[1] = Math.min(1.0, horizTop * 0.15);
-      inputs[2] = Math.min(1.0, horizBot * 0.15);
-      inputs[3] = Math.min(1.0, (top + left) * 0.08);
-      inputs[4] = Math.min(1.0, (bot + right) * 0.08);
-      inputs[5] = Math.min(1.0, diag2 * 0.14);
-      inputs[6] = Math.min(1.0, left * 0.12);
-      inputs[7] = Math.min(1.0, right * 0.12);
-      inputs[8] = Math.min(1.0, center * 0.16);
-      inputs[9] = Math.min(1.0, (top + right) * 0.08);
-
-      for (let k = 10; k < 20; k++) {
-        inputs[k] = Math.min(1.0, (inputs[k - 10] * 0.7) + (grid[(k % 12) * 12 + (k * 2) % 12] * 0.5));
-      }
-
-      return inputs;
+      const s = 0.1;
+      feats[0] = Math.min(1, topR * s);
+      feats[1] = Math.min(1, upMid * s);
+      feats[2] = Math.min(1, loMid * s);
+      feats[3] = Math.min(1, botR * s);
+      feats[4] = Math.min(1, leftE * s);
+      feats[5] = Math.min(1, rightE * s);
+      feats[6] = Math.min(1, centerM * 0.06);
+      feats[7] = Math.min(1, tl * 0.08);
+      feats[8] = Math.min(1, tr * 0.08);
+      feats[9] = Math.min(1, bl * 0.08);
+      return feats;
     }
 
-    function forwardPass(inputs) {
-      const a1 = new Float32Array(10);
-      for (let j = 0; j < 10; j++) {
-        let sum = B1[j];
-        for (let i = 0; i < 20; i++) sum += W1[j][i] * inputs[i];
-        a1[j] = Math.max(0, Math.min(1, 1 / (1 + Math.exp(-sum * 2))));
-      }
+    // Compute aggregator features for visualization (8 features for hidden layer 2)
+    function computeAggregators(feats, sims) {
+      const agg = new Float32Array(8);
+      if (!hasDrawn) return agg;
+      agg[0] = Math.min(1, (feats[4] + feats[5]) * 0.6); // Loop
+      agg[1] = Math.min(1, Math.abs(feats[4] - feats[5]) + feats[6] * 0.3); // Line
+      agg[2] = Math.min(1, (feats[0] + feats[3]) * 0.5); // Curve
+      agg[3] = Math.min(1, feats[6] * 0.8); // Cross
+      agg[4] = Math.min(1, (feats[7] + feats[8]) * 0.4); // Arc
+      agg[5] = Math.min(1, Math.max(sims[2], sims[7]) * 0.9); // Diagonal
+      agg[6] = Math.min(1, (feats[0] * feats[4]) * 2); // Corner
+      agg[7] = Math.min(1, (feats[0]+feats[1]+feats[2]+feats[3])*0.2); // Density
+      return agg;
+    }
 
-      const a2 = new Float32Array(8);
-      for (let j = 0; j < 8; j++) {
-        let sum = B2[j];
-        for (let i = 0; i < 10; i++) sum += W2[j][i] * a1[i];
-        a2[j] = Math.max(0, Math.min(1, 1 / (1 + Math.exp(-sum * 2.2))));
-      }
+    // Full forward pass: extract → classify → derive activations for graph
+    function forwardPass(grid) {
+      const feats = computeFeatures(grid);
+      const sims = hasDrawn ? classify(grid) : new Float32Array(10);
+      const agg = computeAggregators(feats, sims);
 
-      const logits = new Float32Array(10);
-      let maxLogit = -999;
-      for (let j = 0; j < 10; j++) {
-        let sum = B3[j];
-        for (let i = 0; i < 8; i++) sum += W3[j][i] * a2[i];
-        logits[j] = sum;
-        if (sum > maxLogit) maxLogit = sum;
-      }
-
-      const expVals = new Float32Array(10);
-      let sumExp = 0;
-      for (let j = 0; j < 10; j++) {
-        expVals[j] = Math.exp((logits[j] - maxLogit) * 2.5);
-        sumExp += expVals[j];
-      }
-
+      // Softmax over similarities to get probabilities
       const probs = new Float32Array(10);
-      for (let j = 0; j < 10; j++) {
-        probs[j] = hasDrawn ? (expVals[j] / sumExp) : (j === 0 ? 0.1 : 0.1);
+      if (hasDrawn) {
+        let maxS = -999;
+        for (let d = 0; d < 10; d++) if (sims[d] > maxS) maxS = sims[d];
+        let sumExp = 0;
+        for (let d = 0; d < 10; d++) {
+          probs[d] = Math.exp((sims[d] - maxS) * 12);
+          sumExp += probs[d];
+        }
+        for (let d = 0; d < 10; d++) probs[d] /= sumExp;
+      } else {
+        for (let d = 0; d < 10; d++) probs[d] = 0.1;
       }
 
-      return { inputs, a1, a2, probs };
+      // Return activations compatible with the graph visualization
+      // inputs = first 10 features (used by graph layer 0, indexed as *2 for display)
+      const inputs = new Float32Array(20);
+      for (let i = 0; i < 10; i++) { inputs[i * 2] = feats[i]; inputs[i * 2 + 1] = feats[i] * 0.5; }
+
+      return { inputs, a1: feats, a2: agg, probs, sims };
     }
 
-    let currentNetworkState = forwardPass(new Float32Array(20));
+    let currentNetworkState = forwardPass(new Float32Array(144));
 
     function renderOutputUI(probs) {
       if (!probListEl) return;
@@ -895,8 +935,7 @@ async function boot() {
 
     function processDrawing() {
       const grid = extractInputs();
-      const inputs = computeInputs(grid);
-      currentNetworkState = forwardPass(inputs);
+      currentNetworkState = forwardPass(grid);
       renderOutputUI(currentNetworkState.probs);
     }
 
@@ -1011,14 +1050,14 @@ async function boot() {
         nodePositions.filter(n => n.layer === 3)
       ];
 
+      // Generate visual connection weights using seeded pseudo-random
       for (let l = 0; l < 3; l++) {
         const srcGroup = layerNodes[l];
         const dstGroup = layerNodes[l + 1];
         srcGroup.forEach((src, i) => {
           dstGroup.forEach((dst, j) => {
-            const wVal = l === 0 ? W1[j % 10][i * 2 % 20]
-                       : l === 1 ? W2[j % 8][i % 10]
-                       : W3[j % 10][i % 8];
+            const seed = (l * 1000 + i * 37 + j * 13) % 100;
+            const wVal = Math.sin(seed * 0.7) * 0.8 + Math.cos(seed * 1.3) * 0.3;
             connectionLines.push({
               src, dst, layer: l, srcIdx: i, dstIdx: j, weight: wVal
             });
@@ -1196,8 +1235,8 @@ async function boot() {
                     : n.layer === 1 ? a1[n.index] || 0
                     : n.layer === 2 ? a2[n.index] || 0
                     : probs[n.index] || 0;
-          const bias = n.layer === 1 ? B1[n.index] : n.layer === 2 ? B2[n.index] : n.layer === 3 ? B3[n.index] : 0;
-          const desc = n.layer === 1 ? FEATURE_NAMES[n.index] : n.layer === 2 ? AGGREGATOR_NAMES[n.index] : n.layer === 3 ? `Digit Class ${n.index}` : `Input Grid (${n.index * 2})`;
+          const bias = 0;
+          const desc = n.layer === 0 ? FEATURE_NAMES[n.index] || `Input ${n.index}` : n.layer === 1 ? FEATURE_NAMES[n.index] : n.layer === 2 ? AGGREGATOR_NAMES[n.index] : `Digit Class ${n.index}`;
 
           tooltip.innerHTML = `
             <div style="font-weight:700; color:#79dcff; margin-bottom:3px;">Neuron ${n.id}</div>
