@@ -5,6 +5,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
+from digit_model import model_parameters, predict
 from portfolio_data import PORTFOLIO
 
 
@@ -30,6 +31,9 @@ class PortfolioHandler(SimpleHTTPRequestHandler):
         if route == "/api/profile.json":
             self._serve_json(PORTFOLIO)
             return
+        if route == "/api/digit-model.json":
+            self._serve_json(model_parameters())
+            return
         if route in ("/", "/index.html"):
             self._serve_template()
             return
@@ -40,13 +44,26 @@ class PortfolioHandler(SimpleHTTPRequestHandler):
             return
         return super().do_GET()
 
+    def do_POST(self):
+        route = urlparse(self.path).path
+        if route != "/api/digit-predict.json":
+            self.send_error(404)
+            return
+
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
+            self._serve_json(predict(payload.get("pixels")))
+        except (TypeError, ValueError, json.JSONDecodeError) as error:
+            self._serve_json({"error": str(error)}, status=400)
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
         super().end_headers()
 
-    def _serve_json(self, payload):
+    def _serve_json(self, payload, status=200):
         body = json.dumps(payload).encode("utf-8")
-        self.send_response(200)
+        self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
