@@ -1362,6 +1362,41 @@ body.screen-blink::after {
   image-rendering: pixelated;
 }
 
+.drawing-guide-note {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 10px;
+  background: rgba(112, 232, 255, 0.04);
+  border: 1px dashed rgba(112, 232, 255, 0.2);
+  border-radius: 10px;
+}
+
+.guide-note-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: rgba(220, 240, 255, 0.85);
+}
+
+.guide-note-item p {
+  margin: 0;
+}
+
+.guide-note-item strong {
+  color: #79dcff;
+}
+
+.guide-icon {
+  font-size: 0.78rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 /* Center Panel: Neural Graph Canvas */
 .neural-graph-panel {
   display: flex;
