@@ -96,14 +96,18 @@ async function boot() {
 
   const skillsGrid = document.getElementById("skills-grid");
   if (skillsGrid) {
-    skillsGrid.innerHTML = Object.entries(data.skills).map(([group, values]) => `
-      <div class="skill-group">
-        <h4>${group}</h4>
-        <div class="skill-tags">
-          ${values.map((value) => `<span class="skill-tag">${value}</span>`).join("")}
-        </div>
-      </div>
-    `).join("");
+    skillsGrid.innerHTML = Object.entries(data.skills).map(([group, values]) => {
+      // Repeat tags 4× for seamless centered loop (animation shifts -25% per cycle)
+      const tagsHTML = values.map((v) => `<span class="skill-tag">${v}</span>`).join("");
+      const doubled = tagsHTML + tagsHTML + tagsHTML + tagsHTML; // four copies = always fills viewport
+      return `
+        <div class="skill-group">
+          <h4>${group}</h4>
+          <div class="skill-ticker-wrap">
+            <div class="skill-ticker-track">${doubled}</div>
+          </div>
+        </div>`;
+    }).join("");
   }
 
   const domainBoard = document.getElementById("domain-mastery");
@@ -598,7 +602,7 @@ async function boot() {
       ctx.shadowBlur = 8;
       ctx.font = `500 ${Math.max(10, titleFontSize * 0.26)}px "Roboto Mono", monospace`;
       ctx.fillStyle = "rgba(255, 215, 160, 0.85)";
-      ctx.fillText("AI / ML ENGINEER & FULL STACK DEVELOPER", cx, cy + titleFontSize * 0.85);
+      ctx.fillText("AI / ML ENGINEER", cx, cy + titleFontSize * 0.85);
 
       ctx.restore();
     }
