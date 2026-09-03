@@ -59,16 +59,8 @@ body {
 
 .skills-bg {
   z-index: -1;
-  opacity: 0;
-  transition: opacity 1.2s ease;
-  background:
-    linear-gradient(180deg, rgba(2, 12, 22, 0.22), rgba(3, 9, 18, 0.70)),
-    url("/static/img/skills-bg-desktop.png") center center / cover no-repeat;
-  filter: saturate(0.85) contrast(1.08) brightness(0.55) blur(1.5px);
-}
-
-.skills-bg.visible {
-  opacity: 1;
+  opacity: 0 !important;
+  pointer-events: none;
 }
 
 a {
@@ -700,6 +692,46 @@ body.screen-blink::after {
   color: #eef7ff;
 }
 
+/* ── Technical Skills section: no bg card, centered ── */
+#skills-anchor {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  padding: 48px 0;
+}
+
+#skills-anchor .section-heading {
+  text-align: center;
+}
+
+#skills-anchor .section-heading .eyebrow {
+  justify-content: center;
+  display: flex;
+}
+
+#skills-anchor .skill-group h4 {
+  text-align: center;
+  padding-left: 0;
+  border-left: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+#skills-anchor .skill-group h4::before,
+#skills-anchor .skill-group h4::after {
+  content: "";
+  flex: 1;
+  max-width: 40px;
+  height: 2px;
+  background: #e05c2a;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
 .futuristic-projects {
   position: relative;
   overflow: hidden;
@@ -846,8 +878,7 @@ body.screen-blink::after {
   border: 1px solid rgba(121, 226, 255, 0.16);
 }
 
-.timeline-item strong,
-.skill-group h4 {
+.timeline-item strong {
   display: block;
   margin-bottom: 4px;
 }
@@ -1142,18 +1173,100 @@ body.screen-blink::after {
   text-transform: uppercase;
 }
 
+/* ── Technical Skills: Marquee Ticker ── */
 .skills-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  overflow: hidden;
 }
 
 .skill-group {
-  padding: 18px;
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(11, 22, 42, 0.88), rgba(8, 18, 34, 0.76));
-  border: 1px solid rgba(121, 226, 255, 0.18);
-  color: #d9ecff;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.skill-group h4 {
+  margin: 0;
+  padding-left: 14px;
+  border-left: 3px solid #e05c2a;
+  font-family: var(--body-font);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: #e05c2a;
+}
+
+/* Ticker track wrapper — centered + edge fade */
+.skill-ticker-wrap {
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+}
+
+.skill-ticker-wrap:hover .skill-ticker-track {
+  animation-play-state: paused;
+}
+
+/* The scrolling track — 4 copies for seamless centered loop */
+.skill-ticker-track {
+  display: flex;
+  gap: 12px;
+  width: max-content;
+  will-change: transform;
+}
+
+/* Odd rows scroll left → right, even rows scroll right → left */
+.skill-group:nth-child(odd) .skill-ticker-track {
+  animation: skillTickerLeft 32s linear infinite;
+}
+
+.skill-group:nth-child(even) .skill-ticker-track {
+  animation: skillTickerRight 32s linear infinite;
+}
+
+/* 4 copies: one full cycle = -25% shift */
+@keyframes skillTickerLeft {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-25%); }
+}
+
+@keyframes skillTickerRight {
+  0%   { transform: translateX(-25%); }
+  100% { transform: translateX(0); }
+}
+
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 9px 18px;
+  border-radius: 8px;
+  background: rgba(6, 10, 22, 0.90);
+  border: 1px solid rgba(200, 200, 230, 0.16);
+  color: #cfdcee;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: default;
+  transition: border-color 200ms ease, background 200ms ease, color 200ms ease;
+}
+
+.skill-tag:hover {
+  border-color: rgba(224, 92, 42, 0.60);
+  background: rgba(224, 92, 42, 0.10);
+  color: #f4c6ac;
 }
 
 .skill-tags,
@@ -1163,16 +1276,11 @@ body.screen-blink::after {
   gap: 10px;
 }
 
-.skill-tag,
 .badge {
   padding: 10px 14px;
   border-radius: 999px;
-  background: rgba(92, 180, 255, 0.10);
-  border: 1px solid rgba(124, 222, 255, 0.22);
-}
-
-.badge {
   background: linear-gradient(180deg, rgba(100, 233, 255, 0.18), rgba(95, 155, 255, 0.10));
+  border: 1px solid rgba(124, 222, 255, 0.22);
 }
 
 .resume-modal {
