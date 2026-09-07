@@ -1057,3 +1057,21 @@ boot().catch((error) => {
     summaryList.innerHTML = "<li>Please refresh the page once. If the issue continues, restart the local Python server.</li>";
   }
 });
+
+(() => {
+  const reveal = document.getElementById("hero-identity-reveal");
+  if (!reveal || window.matchMedia("(pointer: coarse)").matches) return;
+
+  reveal.addEventListener("pointermove", (event) => {
+    const rect = reveal.getBoundingClientRect();
+    reveal.style.setProperty("--reveal-x", `${event.clientX - rect.left}px`);
+    reveal.style.setProperty("--reveal-y", `${event.clientY - rect.top}px`);
+    reveal.style.setProperty("--reveal-size", "160px");
+    reveal.classList.add("is-revealing");
+  });
+
+  reveal.addEventListener("pointerleave", () => {
+    reveal.style.setProperty("--reveal-size", "0px");
+    reveal.classList.remove("is-revealing");
+  });
+})();
