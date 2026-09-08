@@ -1916,9 +1916,7 @@ body.resume-open .portfolio-shell {
     width: min(29vw, 390px);
     height: calc(100% - 18px);
     overflow: hidden;
-    border-radius: 28px 28px 0 0;
-    background: #07121f;
-    box-shadow: 0 22px 40px rgba(0, 0, 0, 0.32);
+    background: transparent;
     cursor: crosshair;
   }
 
@@ -1957,14 +1955,8 @@ body.resume-open .portfolio-shell {
     z-index: 1;
   }
 
-  /* Border removed — clean panel, no outline */
   .hero-identity-reveal::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    border-radius: inherit;
-    box-shadow: inset 0 0 48px rgba(0, 0, 0, 0.45);
+    display: none;
   }
 
   .hero-reveal-label {
