@@ -83,12 +83,15 @@ async function boot() {
   const educationGrid = document.getElementById("education-grid");
   if (educationGrid) {
     educationGrid.innerHTML = data.education.map((item) => `
-      <article class="card">
-        <h4>${item.degree}</h4>
-        <p>${item.institution}</p>
-        <div class="timeline">
-          <div class="timeline-item"><strong>Duration</strong>${item.duration}</div>
-          <div class="timeline-item"><strong>Metric</strong>${item.metric}</div>
+      <article class="card education-card">
+        <div class="education-card-bg" style="background-image: url('${item.image || ''}')" aria-hidden="true"></div>
+        <div class="education-card-content">
+          <h4>${item.degree}</h4>
+          <p class="education-institution">${item.institution}</p>
+          <div class="timeline">
+            <div class="timeline-item"><strong>Duration</strong>${item.duration}</div>
+            <div class="timeline-item"><strong>Metric</strong>${item.metric}</div>
+          </div>
         </div>
       </article>
     `).join("");
