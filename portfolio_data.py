@@ -89,18 +89,21 @@ PORTFOLIO = {
             "institution": "Gyan Ganga Institute of Technology & Sciences",
             "duration": "2023 - Present",
             "metric": "CGPA: 7.26",
+            "image": "/static/img/education-btech.jpg",
         },
         {
             "degree": "Higher Secondary Education (12th Grade - PCM Stream)",
             "institution": "Pt. L.S. Jha Govt. Model School of Education",
             "duration": "2019 - 2023",
             "metric": "Percentage: 77%",
+            "image": "/static/img/education-higher-sec.jpg",
         },
         {
             "degree": "Secondary Education (10th Grade)",
             "institution": "Pt. L.S. Jha Govt. Model School of Education",
             "duration": "2020 - 2021",
             "metric": "Percentage: 87%",
+            "image": "/static/img/education-sec.jpg",
         },
     ],
     "projects": [
