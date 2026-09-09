@@ -900,6 +900,103 @@ body.screen-blink::after {
   margin-bottom: 4px;
 }
 
+.education-card {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(180deg, rgba(10, 20, 38, 0.88), rgba(7, 15, 29, 0.94));
+  border: 1px solid rgba(121, 226, 255, 0.22);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease;
+  will-change: transform;
+}
+
+.education-card-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  opacity: 0.34;
+  filter: saturate(1.15) brightness(0.85);
+  transform: scale(1);
+  transition:
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.4s ease,
+    filter 0.4s ease;
+  pointer-events: none;
+}
+
+.education-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(95, 225, 255, 0.12), transparent 45%),
+    linear-gradient(180deg, rgba(8, 17, 34, 0.72) 0%, rgba(6, 14, 28, 0.90) 100%);
+  pointer-events: none;
+}
+
+.education-card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.education-card h4 {
+  font-size: 1.22rem;
+  line-height: 1.35;
+  color: #f0f8ff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.education-institution {
+  color: #abd8ff;
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.education-card .timeline {
+  margin-top: auto;
+}
+
+.education-card .timeline-item {
+  background: rgba(9, 24, 48, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(121, 226, 255, 0.24);
+  transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+}
+
+/* Hover transition: scales up smoothly ("comes small large to the user") */
+.education-card:hover {
+  transform: translateY(-8px) scale(1.035);
+  border-color: rgba(121, 226, 255, 0.65);
+  box-shadow:
+    0 24px 50px rgba(0, 0, 0, 0.55),
+    0 0 32px rgba(88, 225, 255, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.education-card:hover .education-card-bg {
+  transform: scale(1.10);
+  opacity: 0.52;
+  filter: saturate(1.25) brightness(1.02);
+}
+
+.education-card:hover .timeline-item {
+  background: rgba(15, 36, 68, 0.85);
+  border-color: rgba(121, 226, 255, 0.42);
+  transform: translateY(-1px);
+}
+
 .project-list {
   margin: 12px 0 0;
   padding-left: 18px;
