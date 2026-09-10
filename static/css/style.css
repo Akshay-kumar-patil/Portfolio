@@ -920,8 +920,8 @@ body.screen-blink::after {
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-  opacity: 0.34;
-  filter: saturate(1.15) brightness(0.85);
+  opacity: 0.78;
+  filter: saturate(1.25) brightness(1.05) contrast(1.05);
   transform: scale(1);
   transition:
     transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
@@ -936,8 +936,8 @@ body.screen-blink::after {
   inset: 0;
   z-index: 1;
   background:
-    radial-gradient(circle at 10% 10%, rgba(95, 225, 255, 0.12), transparent 45%),
-    linear-gradient(180deg, rgba(8, 17, 34, 0.72) 0%, rgba(6, 14, 28, 0.90) 100%);
+    radial-gradient(circle at 10% 10%, rgba(95, 225, 255, 0.15), transparent 45%),
+    linear-gradient(180deg, rgba(6, 15, 30, 0.42) 0%, rgba(4, 10, 22, 0.75) 100%);
   pointer-events: none;
 }
 
@@ -953,15 +953,15 @@ body.screen-blink::after {
 .education-card h4 {
   font-size: 1.22rem;
   line-height: 1.35;
-  color: #f0f8ff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 14px rgba(0, 0, 0, 0.9);
 }
 
 .education-institution {
-  color: #abd8ff;
-  font-weight: 500;
+  color: #cbebff;
+  font-weight: 600;
   margin-bottom: 8px;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
 }
 
 .education-card .timeline {
@@ -969,31 +969,32 @@ body.screen-blink::after {
 }
 
 .education-card .timeline-item {
-  background: rgba(9, 24, 48, 0.75);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(121, 226, 255, 0.24);
+  background: rgba(6, 16, 34, 0.84);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(121, 226, 255, 0.32);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
 /* Hover transition: scales up smoothly ("comes small large to the user") */
 .education-card:hover {
   transform: translateY(-8px) scale(1.035);
-  border-color: rgba(121, 226, 255, 0.65);
+  border-color: rgba(121, 226, 255, 0.75);
   box-shadow:
-    0 24px 50px rgba(0, 0, 0, 0.55),
-    0 0 32px rgba(88, 225, 255, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 24px 50px rgba(0, 0, 0, 0.65),
+    0 0 35px rgba(88, 225, 255, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .education-card:hover .education-card-bg {
   transform: scale(1.10);
-  opacity: 0.52;
-  filter: saturate(1.25) brightness(1.02);
+  opacity: 0.92;
+  filter: saturate(1.35) brightness(1.12) contrast(1.08);
 }
 
 .education-card:hover .timeline-item {
-  background: rgba(15, 36, 68, 0.85);
-  border-color: rgba(121, 226, 255, 0.42);
+  background: rgba(10, 26, 52, 0.90);
+  border-color: rgba(121, 226, 255, 0.55);
   transform: translateY(-1px);
 }
 
