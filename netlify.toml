@@ -1,0 +1,41 @@
+[build]
+  publish = "."
+  command = "echo 'Static site - no build needed'"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+
+[[headers]]
+  for = "/static/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/static/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/static/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Access-Control-Allow-Origin = "*"
+
+[[redirects]]
+  from = "/api/profile.json"
+  to   = "/static/profile.json"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to   = "/index.html"
+  status = 200

@@ -1821,8 +1821,8 @@ body.screen-blink::after {
 /* ── Neural Matrix Fabric Section ─── */
 .matrix-fabric-section {
   width: 100%;
-  margin-top: 24px;
-  padding: 22px 26px;
+  margin-top: 36px;
+  padding: 32px 36px;
   position: relative;
   background: rgba(10, 15, 26, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1837,21 +1837,21 @@ body.screen-blink::after {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 22px;
 }
 
 .matrix-title-group .eyebrow {
-  font-size: 0.8rem;
+  font-size: 0.92rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #ff9e43;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .matrix-desc {
-  font-size: 0.88rem;
+  font-size: 0.98rem;
   color: rgba(220, 235, 255, 0.75);
   margin: 0;
 }
@@ -1859,13 +1859,13 @@ body.screen-blink::after {
 .matrix-badge {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
+  gap: 6px;
+  padding: 7px 16px;
   background: rgba(255, 158, 67, 0.08);
   border: 1px solid rgba(255, 158, 67, 0.25);
   border-radius: 16px;
   color: #ffb86c;
-  font-size: 0.74rem;
+  font-size: 0.82rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -1874,12 +1874,12 @@ body.screen-blink::after {
 .matrix-canvas-card {
   position: relative;
   width: 100%;
-  height: clamp(220px, 28vw, 320px);
-  border-radius: 14px;
+  height: clamp(300px, 38vw, 480px);
+  border-radius: 16px;
   overflow: hidden;
   background: #04070d;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
   cursor: grab;
 }
 

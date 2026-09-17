@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Akshay Kumar Patil | Ghibli Portfolio</title>
+  <meta name="description" content="A Ghibli-inspired responsive portfolio for Akshay Kumar Patil." />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body style="--scene-bg: url('/static/img/opening-ghibli.png');">
+  <div class="site-bg" aria-hidden="true"></div>
+  <div class="site-bg skills-bg" id="skills-bg" aria-hidden="true"></div>
+  <div class="wind-trail" id="wind-trail" aria-hidden="true">
+    <span class="cursor-glow" id="cursor-glow"></span>
+  </div>
+  <div class="storm-layer" id="storm-layer" aria-hidden="true">
+    <div class="storm-vortex" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="storm-alert" role="alertdialog" aria-modal="true" aria-labelledby="storm-title" aria-describedby="storm-copy">
+      <p class="eyebrow">The valley is restless</p>
+      <h2 id="storm-title">A little too much wind</h2>
+      <p id="storm-copy">The portfolio has been swept into a playful storm.</p>
+      <button class="button primary" id="reset-storm" type="button">Reset everything</button>
+    </div>
+  </div>
+  <div class="opening-screen" id="opening-screen" aria-hidden="false">
+    <div class="opening-scene">
+      <div class="opening-bg"></div>
+      <div class="opening-vignette"></div>
+      <div class="floating-particles"></div>
+      <div class="opening-copy">
+        <p class="eyebrow">Welcome to the valley</p>
+        <h1>Akshay Kumar Patil</h1>
+        <p>AI / ML developer, focused on performant RAG applications, ML / DL models, and AI-powered solutions.</p>
+        <button class="enter-button" id="enter-button" type="button">Enter the portfolio</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="portfolio-shell">
+    <header class="hero" id="hero">
+      <div class="hero-intro glass reveal">
+        <h1 id="hero-name">Hi, I'm Akshay Kumar Patil</h1>
+        <h2 id="headline"></h2>
+        <ul class="hero-summary" id="summary-list"></ul>
+        <div class="hero-chips" id="hero-chips"></div>
+        <div class="hero-actions">
+          <button class="button primary" id="view-skills" type="button">View Skills</button>
+          <button class="button secondary" id="contact-me" type="button">Contact Me</button>
+          <button class="button secondary" id="open-resume" type="button">Resume</button>
+        </div>
+        <div class="hero-identity-reveal" id="hero-identity-reveal" aria-label="Move the pointer across the robot to reveal Akshay">
+          <img class="hero-person-image" src="/static/img/hero-akshay-cutout.png" alt="Akshay Kumar Patil" />
+          <img class="hero-robot-image" src="/static/img/hero-robot.png" alt="" aria-hidden="true" />
+          <span class="hero-reveal-label" aria-hidden="true">Reveal Akshay</span>
+        </div>
+      </div>
+
+      <div class="hero-panels">
+        <section class="hero-stats glass reveal">
+          <div class="panel-head">
+            <p class="eyebrow">Snapshot</p>
+            <h3>At a glance</h3>
+          </div>
+          <div class="metric-grid" id="hero-metrics"></div>
+        </section>
+
+        <section class="hero-analytics glass reveal">
+          <div class="panel-head">
+            <p class="eyebrow">Analytics & Skills</p>
+            <h3>Domain Mastery</h3>
+          </div>
+          <div class="analytics-layout">
+            <div class="competency-map" aria-label="8D competency mapping chart">
+              <svg viewBox="0 0 320 320" role="img" aria-labelledby="competency-title competency-description">
+                <title id="competency-title">8D competency mapping</title>
+                <desc id="competency-description">An abstract radar map representing Akshay's technical competency areas.</desc>
+                <g class="map-grid">
+                  <circle cx="160" cy="160" r="112"></circle>
+                  <circle cx="160" cy="160" r="84"></circle>
+                  <circle cx="160" cy="160" r="56"></circle>
+                  <circle cx="160" cy="160" r="28"></circle>
+                  <path d="M160 48V272M48 160H272M81 81L239 239M239 81L81 239"></path>
+                </g>
+                <polygon class="map-area" points="160,58 232,88 260,160 229,228 160,258 89,225 58,160 90,91"></polygon>
+                <polygon class="map-line" points="160,58 232,88 260,160 229,228 160,258 89,225 58,160 90,91"></polygon>
+                <g class="map-points">
+                  <circle cx="160" cy="58" r="4"></circle><circle cx="232" cy="88" r="4"></circle>
+                  <circle cx="260" cy="160" r="4"></circle><circle cx="229" cy="228" r="4"></circle>
+                  <circle cx="160" cy="258" r="4"></circle><circle cx="89" cy="225" r="4"></circle>
+                  <circle cx="58" cy="160" r="4"></circle><circle cx="90" cy="91" r="4"></circle>
+                </g>
+              </svg>
+              <p><span class="map-signal">*</span> 8D COMPETENCY MAPPING</p>
+            </div>
+            <div class="domain-mastery" id="domain-mastery"></div>
+          </div>
+        </section>
+      </div>
+    </header>
+
+    <section class="section glass reveal">
+      <div class="section-heading">
+        <h3>Education</h3>
+      </div>
+      <div class="cards grid-3" id="education-grid"></div>
+    </section>
+
+    <section class="section glass reveal futuristic-projects">
+      <div class="section-heading">
+        <p class="eyebrow">Projects</p>
+        <h3>GitHub projects built from your repo list</h3>
+      </div>
+      <div class="cards grid-2" id="projects-grid"></div>
+    </section>
+
+    <section class="section glass reveal">
+      <div class="section-heading">
+        <h3>Special Mention</h3>
+      </div>
+      <div class="special-project" id="special-project"></div>
+    </section>
+
+    <section class="section glass reveal" id="skills-anchor">
+      <div class="section-heading">
+        <p class="eyebrow">Technical Skills</p>
+        <h3>The craft behind the scenes</h3>
+      </div>
+      <div class="skills-grid" id="skills-grid"></div>
+    </section>
+
+    <section class="section glass reveal" id="contact-section">
+      <div class="section-heading">
+        <p class="eyebrow">Contact</p>
+        <h3>Let's build something useful</h3>
+      </div>
+      <div class="contact-strip">
+        <div>
+          <p class="card-label">India</p>
+          <p>Jabalpur, Madhya Pradesh</p>
+        </div>
+        <div>
+          <p class="card-label">Email</p>
+          <p id="contact-email"></p>
+        </div>
+        <div>
+          <p class="card-label">Resume</p>
+          <button class="button secondary" id="footer-open-resume" type="button">Open Resume</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Neural Activity Section -->
+    <section class="section neural-activity-section glass reveal" id="neural-activity-section">
+      <div class="section-heading">
+        <p class="eyebrow">Neural Activity</p>
+        <h3>Watch the network recognize what you draw</h3>
+      </div>
+
+      <div class="neural-app-container">
+        <!-- Left Panel: Drawing Canvas & Downsample Preview -->
+        <div class="neural-canvas-panel">
+          <div class="canvas-header">
+            <span class="canvas-label">DRAW A DIGIT (0-9)</span>
+            <button type="button" class="clear-btn" id="neural-clear-btn">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              Clear
+            </button>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="neural-draw-canvas" width="160" height="160"></canvas>
+          </div>
+          <div class="downsample-preview-box">
+            <div class="downsample-info">
+              <span class="downsample-label">Input Grid (12x12)</span>
+              <span class="downsample-sub">Normalized Tensor</span>
+            </div>
+            <canvas id="neural-downsample-canvas" width="48" height="48"></canvas>
+          </div>
+          
+          <!-- Drawing Guide Note Box -->
+          <div class="drawing-guide-note">
+            <div class="guide-note-item">
+              <span class="guide-icon">💡</span>
+              <p><strong>Tip:</strong> Draw a large digit consuming most of the full box area for best accuracy.</p>
+            </div>
+            <div class="guide-note-item">
+              <span class="guide-icon">ℹ️</span>
+              <p><strong>Note:</strong> Model is trained on standard MNIST digit patterns. If it makes a mistake, please don't judge — adjust stroke scale or pattern!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Panel: Interactive Real-Time Neural Network Graph -->
+        <div class="neural-graph-panel">
+          <div class="graph-header">
+            <span>MULTILAYER PERCEPTRON GRAPH</span>
+            <span class="pulse-indicator"><span class="pulse-dot"></span> Live Computations</span>
+          </div>
+          <div class="graph-canvas-wrap" id="neural-graph-wrap">
+            <canvas id="neural-graph-canvas"></canvas>
+            <div class="neural-tooltip" id="neural-tooltip" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <!-- Right Panel: Output & Confidence Distribution -->
+        <div class="neural-output-panel">
+          <div class="output-prediction-card">
+            <span class="output-label">PREDICTION</span>
+            <div class="prediction-value" id="neural-pred-val">?</div>
+            <div class="confidence-badge" id="neural-conf-badge">0%</div>
+          </div>
+
+          <div class="probability-bars-wrap">
+            <span class="prob-title">CLASS PROBABILITIES</span>
+            <div class="prob-list" id="neural-prob-list">
+              <!-- Dynamically populated 0-9 probability bars -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section glass reveal">
+      <div class="section-heading">
+        <p class="eyebrow">Achievements</p>
+        <h3>Wins and certifications</h3>
+      </div>
+      <div class="badge-row" id="achievements-row"></div>
+    </section>
+    <section class="section matrix-fabric-section glass reveal" id="matrix-section">
+      <div class="matrix-header">
+        <div class="matrix-title-group">
+          <p class="eyebrow">Neural Matrix Fabric</p>
+          <p class="matrix-desc">Hover or drag the curtain — the source code itself hangs like fabric in the breeze.</p>
+        </div>
+        <div class="matrix-badge">
+          <svg class="matrix-badge-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h6v6M14 10l6-6M9 21H3v-6M10 14l-6 6"/>
+          </svg>
+          <span>hover &middot; drag to stretch</span>
+        </div>
+      </div>
+
+      <div class="matrix-canvas-card">
+        <canvas id="matrix-fabric-canvas"></canvas>
+      </div>
+
+      <footer class="matrix-footer">
+        <p class="footer-links">
+          <a id="footer-github" href="#" target="_blank" rel="noreferrer">GitHub</a>
+          <span>&middot;</span>
+          <a id="footer-linkedin" href="#" target="_blank" rel="noreferrer">LinkedIn</a>
+          <span>&middot;</span>
+          <a id="footer-resume" href="#" target="_blank" rel="noreferrer">Resume PDF</a>
+        </p>
+      </footer>
+    </section>
+
+  </main>
+
+  <div class="resume-modal" id="resume-modal" aria-hidden="true">
+    <div class="resume-backdrop" id="resume-backdrop"></div>
+    <section class="resume-card" role="dialog" aria-modal="true" aria-label="Resume preview">
+      <div class="resume-toolbar">
+        <div>
+          <p class="eyebrow">Resume Preview</p>
+          <h3>Akshay Kumar Patil</h3>
+        </div>
+        <button class="button secondary" id="close-resume" type="button">Close</button>
+      </div>
+      <iframe class="resume-frame" src="/static/resume/Akshay_updated_resume_main.pdf" title="Akshay Kumar Patil Resume"></iframe>
+    </section>
+  </div>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

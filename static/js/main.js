@@ -1,5 +1,5 @@
 async function boot() {
-  const response = await fetch("/api/profile.json", { cache: "no-store" });
+  const response = await fetch("/static/profile.json", { cache: "no-store" });
   if (!response.ok) {
     throw new Error(`Profile request failed with ${response.status}`);
   }
