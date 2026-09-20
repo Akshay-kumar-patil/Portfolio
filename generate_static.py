@@ -9,7 +9,7 @@ from portfolio_data import PORTFOLIO
 os.makedirs("static", exist_ok=True)
 with open("static/profile.json", "w", encoding="utf-8") as f:
     json.dump(PORTFOLIO, f, ensure_ascii=False, indent=2)
-print("✓ Created static/profile.json")
+print("[OK] Created static/profile.json")
 
 # 2. Generate root index.html from templates/index.html
 template = open("templates/index.html", "r", encoding="utf-8").read()
@@ -23,5 +23,5 @@ static_html = static_html.replace(
 )
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(static_html)
-print("✓ Created index.html")
+print("[OK] Created index.html")
 print("\nReady for Netlify. Commit index.html and static/profile.json and push.")
