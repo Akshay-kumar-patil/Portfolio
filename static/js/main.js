@@ -1067,8 +1067,15 @@ boot().catch((error) => {
 
   reveal.addEventListener("pointermove", (event) => {
     const rect = reveal.getBoundingClientRect();
-    reveal.style.setProperty("--reveal-x", `${event.clientX - rect.left}px`);
-    reveal.style.setProperty("--reveal-y", `${event.clientY - rect.top}px`);
+    // CSS zoom:0.65 on .portfolio-shell causes getBoundingClientRect() to return
+    // zoomed coords while clientX/Y are in unzoomed viewport space.
+    // We need to read the actual computed zoom to correct the offset.
+    const shell = document.querySelector(".portfolio-shell");
+    const zoom = shell ? parseFloat(getComputedStyle(shell).zoom) || 1 : 1;
+    const x = (event.clientX - rect.left) / zoom;
+    const y = (event.clientY - rect.top) / zoom;
+    reveal.style.setProperty("--reveal-x", `${x}px`);
+    reveal.style.setProperty("--reveal-y", `${y}px`);
     reveal.style.setProperty("--reveal-size", "160px");
     reveal.classList.add("is-revealing");
   });
