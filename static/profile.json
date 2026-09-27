@@ -4,8 +4,13 @@
   "location": "Jabalpur, Madhya Pradesh",
   "education_tag": "Bachelor of Technology, AI & ML",
   "hero": {
+    "kicker": "AI/ML + RAG BUILDS",
+    "name_first": "Akshay",
+    "name_mid": "Kumar",
+    "name_last": "Patil",
     "eyebrow": "Hi, I'm Akshay Kumar Patil.",
     "headline": "AI / ML developer focused on performant RAG applications, ML / DL models, and AI-powered solutions.",
+    "bio": "I build performant RAG applications, ML/DL models, LLM systems, and practical machine learning tools with clean demos, robust architectures, and production-ready workflows.",
     "chips": [
       "India",
       "B.Tech AI & ML 2023-27",
