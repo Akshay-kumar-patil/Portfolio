@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,9 +8,12 @@
   <meta name="description" content="A Ghibli-inspired responsive portfolio for Akshay Kumar Patil." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Audiowide&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@700;800;900&family=Oxanium:wght@600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
+
 <body style="--scene-bg: url('{{SCENE_BG_URL}}');">
   <div class="site-bg" aria-hidden="true"></div>
   <div class="site-bg skills-bg" id="skills-bg" aria-hidden="true"></div>
@@ -20,7 +24,8 @@
     <div class="storm-vortex" aria-hidden="true">
       <span></span><span></span><span></span><span></span><span></span>
     </div>
-    <div class="storm-alert" role="alertdialog" aria-modal="true" aria-labelledby="storm-title" aria-describedby="storm-copy">
+    <div class="storm-alert" role="alertdialog" aria-modal="true" aria-labelledby="storm-title"
+      aria-describedby="storm-copy">
       <p class="eyebrow">The valley is restless</p>
       <h2 id="storm-title">A little too much wind</h2>
       <p id="storm-copy">The portfolio has been swept into a playful storm.</p>
@@ -44,16 +49,26 @@
   <main class="portfolio-shell">
     <header class="hero" id="hero">
       <div class="hero-intro glass reveal">
-        <h1 id="hero-name">Hi, I'm Akshay Kumar Patil</h1>
-        <h2 id="headline"></h2>
-        <ul class="hero-summary" id="summary-list"></ul>
-        <div class="hero-chips" id="hero-chips"></div>
-        <div class="hero-actions">
-          <button class="button primary" id="view-skills" type="button">View Skills</button>
-          <button class="button secondary" id="contact-me" type="button">Contact Me</button>
-          <button class="button secondary" id="open-resume" type="button">Resume</button>
+        <div class="hero-embers" aria-hidden="true">
+          <span class="ember ember-1"></span>
+          <span class="ember ember-2"></span>
+          <span class="ember ember-3"></span>
+          <span class="ember ember-4"></span>
+          <span class="ember ember-5"></span>
         </div>
-        <div class="hero-identity-reveal" id="hero-identity-reveal" aria-label="Move the pointer across the robot to reveal Akshay">
+        <p class="hero-kicker" id="hero-kicker">AI/ML + RAG BUILDS</p>
+        <h1 id="hero-name" class="tech-hero-title"><span class="name-first">Akshay</span> <span class="name-mid">Kumar</span> <span class="name-last">Patil</span></h1>
+        <p class="hero-bio" id="hero-bio">I build performant RAG applications, ML/DL models, LLM systems, and practical
+          machine learning tools with clean demos, robust architectures, and production-ready workflows.</p>
+        <div class="hero-chips tech-chips" id="hero-chips"></div>
+        <div class="hero-actions tech-actions">
+          <button class="tech-btn" id="view-projects" type="button">View Projects</button>
+          <button class="tech-btn resume-btn" id="open-resume" type="button"><span class="btn-arrow">↓</span>
+            Resume</button>
+          <button class="tech-btn" id="contact-me" type="button">Contact Me</button>
+        </div>
+        <div class="hero-identity-reveal" id="hero-identity-reveal"
+          aria-label="Move the pointer across the robot to reveal Akshay">
           <img class="hero-person-image" src="/static/img/hero-akshay-cutout.png" alt="Akshay Kumar Patil" />
           <img class="hero-robot-image" src="/static/img/hero-robot.png" alt="" aria-hidden="true" />
           <span class="hero-reveal-label" aria-hidden="true">Reveal Akshay</span>
@@ -78,7 +93,8 @@
             <div class="competency-map" aria-label="8D competency mapping chart">
               <svg viewBox="0 0 320 320" role="img" aria-labelledby="competency-title competency-description">
                 <title id="competency-title">8D competency mapping</title>
-                <desc id="competency-description">An abstract radar map representing Akshay's technical competency areas.</desc>
+                <desc id="competency-description">An abstract radar map representing Akshay's technical competency
+                  areas.</desc>
                 <g class="map-grid">
                   <circle cx="160" cy="160" r="112"></circle>
                   <circle cx="160" cy="160" r="84"></circle>
@@ -89,10 +105,14 @@
                 <polygon class="map-area" points="160,58 232,88 260,160 229,228 160,258 89,225 58,160 90,91"></polygon>
                 <polygon class="map-line" points="160,58 232,88 260,160 229,228 160,258 89,225 58,160 90,91"></polygon>
                 <g class="map-points">
-                  <circle cx="160" cy="58" r="4"></circle><circle cx="232" cy="88" r="4"></circle>
-                  <circle cx="260" cy="160" r="4"></circle><circle cx="229" cy="228" r="4"></circle>
-                  <circle cx="160" cy="258" r="4"></circle><circle cx="89" cy="225" r="4"></circle>
-                  <circle cx="58" cy="160" r="4"></circle><circle cx="90" cy="91" r="4"></circle>
+                  <circle cx="160" cy="58" r="4"></circle>
+                  <circle cx="232" cy="88" r="4"></circle>
+                  <circle cx="260" cy="160" r="4"></circle>
+                  <circle cx="229" cy="228" r="4"></circle>
+                  <circle cx="160" cy="258" r="4"></circle>
+                  <circle cx="89" cy="225" r="4"></circle>
+                  <circle cx="58" cy="160" r="4"></circle>
+                  <circle cx="90" cy="91" r="4"></circle>
                 </g>
               </svg>
               <p><span class="map-signal">*</span> 8D COMPETENCY MAPPING</p>
@@ -110,7 +130,7 @@
       <div class="cards grid-3" id="education-grid"></div>
     </section>
 
-    <section class="section glass reveal futuristic-projects">
+    <section class="section glass reveal futuristic-projects" id="projects-section">
       <div class="section-heading">
         <p class="eyebrow">Projects</p>
         <h3>Featured Projects</h3>
@@ -168,7 +188,7 @@
             <span class="canvas-label">DRAW A DIGIT (0-9)</span>
             <button type="button" class="clear-btn" id="neural-clear-btn">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
               </svg>
               Clear
             </button>
@@ -183,7 +203,7 @@
             </div>
             <canvas id="neural-downsample-canvas" width="48" height="48"></canvas>
           </div>
-          
+
           <!-- Drawing Guide Note Box -->
           <div class="drawing-guide-note">
             <div class="guide-note-item">
@@ -192,7 +212,8 @@
             </div>
             <div class="guide-note-item">
               <span class="guide-icon">ℹ️</span>
-              <p><strong>Note:</strong> Model is trained on standard MNIST digit patterns. If it makes a mistake, please don't judge — adjust stroke scale or pattern!</p>
+              <p><strong>Note:</strong> Model is trained on standard MNIST digit patterns. If it makes a mistake, please
+                don't judge — adjust stroke scale or pattern!</p>
             </div>
           </div>
         </div>
@@ -241,8 +262,9 @@
           <p class="matrix-desc">Hover or drag the curtain — the source code itself hangs like fabric in the breeze.</p>
         </div>
         <div class="matrix-badge">
-          <svg class="matrix-badge-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M15 3h6v6M14 10l6-6M9 21H3v-6M10 14l-6 6"/>
+          <svg class="matrix-badge-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <path d="M15 3h6v6M14 10l6-6M9 21H3v-6M10 14l-6 6" />
           </svg>
           <span>hover &middot; drag to stretch</span>
         </div>
@@ -275,10 +297,12 @@
         </div>
         <button class="button secondary" id="close-resume" type="button">Close</button>
       </div>
-      <iframe class="resume-frame" src="/static/resume/Akshay_updated_resume_main.pdf" title="Akshay Kumar Patil Resume"></iframe>
+      <iframe class="resume-frame" src="/static/resume/Akshay_updated_resume_main.pdf"
+        title="Akshay Kumar Patil Resume"></iframe>
     </section>
   </div>
 
   <script src="/static/js/main.js"></script>
 </body>
+
 </html>
