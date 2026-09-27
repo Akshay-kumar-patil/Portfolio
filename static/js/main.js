@@ -10,13 +10,33 @@ async function boot() {
     if (node) node.textContent = value;
   };
 
-  setText("hero-name", data.hero.eyebrow);
-  setText("headline", data.hero.headline);
+  const heroKicker = document.getElementById("hero-kicker");
+  if (heroKicker && data.hero?.kicker) {
+    heroKicker.textContent = data.hero.kicker;
+  }
+
+  const heroNameNode = document.getElementById("hero-name");
+  if (heroNameNode) {
+    const firstName = data.hero?.name_first || "Akshay";
+    const midName = data.hero?.name_mid || "Kumar";
+    const lastName = data.hero?.name_last || "Patil";
+    heroNameNode.innerHTML = `<span class="name-first">${firstName}</span> <span class="name-mid">${midName}</span> <span class="name-last">${lastName}</span>`;
+  }
+
+  const heroBioNode = document.getElementById("hero-bio");
+  if (heroBioNode) {
+    heroBioNode.textContent = data.hero?.bio || data.hero?.headline || (
+      "I build performant RAG applications, ML/DL models, LLM systems, and practical " +
+      "machine learning tools with clean demos, robust architectures, and production-ready workflows."
+    );
+  }
+
+  setText("headline", data.hero?.headline || "");
   const summaryList = document.getElementById("summary-list");
   if (summaryList && Array.isArray(data.summary_points)) {
     summaryList.innerHTML = data.summary_points.map((point) => `<li>${point}</li>`).join("");
-  } else {
-    setText("summary-list", data.summary);
+  } else if (summaryList) {
+    setText("summary-list", data.summary || "");
   }
   setText("contact-email", data.contact.email);
 
@@ -37,8 +57,8 @@ async function boot() {
   });
 
   const heroChips = document.getElementById("hero-chips");
-  if (heroChips) {
-    heroChips.innerHTML = data.hero.chips.map((item) => `<span class="hero-chip">${item}</span>`).join("");
+  if (heroChips && data.hero?.chips) {
+    heroChips.innerHTML = data.hero.chips.map((item) => `<span class="tech-chip">${item}</span>`).join("");
   }
 
   const heroMetrics = document.getElementById("hero-metrics");
@@ -389,6 +409,10 @@ async function boot() {
   });
   document.getElementById("close-resume")?.addEventListener("click", closeResume);
   document.getElementById("resume-backdrop")?.addEventListener("click", closeResume);
+
+  document.getElementById("view-projects")?.addEventListener("click", () => {
+    document.getElementById("projects-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   document.getElementById("view-skills")?.addEventListener("click", () => {
     document.getElementById("skills-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
