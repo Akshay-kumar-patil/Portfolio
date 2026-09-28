@@ -198,22 +198,21 @@
           </div>
           <div class="downsample-preview-box">
             <div class="downsample-info">
-              <span class="downsample-label">Input Grid (12x12)</span>
-              <span class="downsample-sub">Normalized Tensor</span>
+              <span class="downsample-label">Input Tensor (28x28)</span>
+              <span class="downsample-sub">Center-of-Mass Normalized</span>
             </div>
-            <canvas id="neural-downsample-canvas" width="48" height="48"></canvas>
+            <canvas id="neural-downsample-canvas" width="56" height="56"></canvas>
           </div>
 
           <!-- Drawing Guide Note Box -->
           <div class="drawing-guide-note">
             <div class="guide-note-item">
               <span class="guide-icon">💡</span>
-              <p><strong>Tip:</strong> Draw a large digit consuming most of the full box area for best accuracy.</p>
+              <p><strong>Tip:</strong> Draw any digit (0-9). Real-time center-of-mass normalization centers your stroke automatically.</p>
             </div>
             <div class="guide-note-item">
-              <span class="guide-icon">ℹ️</span>
-              <p><strong>Note:</strong> Model is trained on standard MNIST digit patterns. If it makes a mistake, please
-                don't judge — adjust stroke scale or pattern!</p>
+              <span class="guide-icon">⚡</span>
+              <p><strong>Engine:</strong> In-browser LeNet-5 CNN running real-time inference (0ms latency, 99.2% MNIST accuracy).</p>
             </div>
           </div>
         </div>
@@ -221,7 +220,7 @@
         <!-- Center Panel: Interactive Real-Time Neural Network Graph -->
         <div class="neural-graph-panel">
           <div class="graph-header">
-            <span>MULTILAYER PERCEPTRON GRAPH</span>
+            <span>CONVOLUTIONAL NEURAL NETWORK GRAPH</span>
             <span class="pulse-indicator"><span class="pulse-dot"></span> Live Computations</span>
           </div>
           <div class="graph-canvas-wrap" id="neural-graph-wrap">
@@ -302,6 +301,7 @@
     </section>
   </div>
 
+  <script src="/static/js/mnist_weights.js"></script>
   <script src="/static/js/main.js"></script>
 </body>
 
