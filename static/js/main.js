@@ -1224,7 +1224,12 @@ async function boot() {
       });
     }
 
-    function graphLoop() { drawGraph(); requestAnimationFrame(graphLoop); }
+    let isGraphVisible = true;
+    new IntersectionObserver((entries) => {
+      isGraphVisible = entries[0].isIntersecting;
+    }, { threshold: 0.01 }).observe(graphCanvas);
+
+    function graphLoop() { if (isGraphVisible) drawGraph(); requestAnimationFrame(graphLoop); }
 
     function distSeg(p, v, w) {
       const l2 = (w.x - v.x) ** 2 + (w.y - v.y) ** 2;
@@ -1279,14 +1284,16 @@ async function boot() {
     graphCanvas.addEventListener("pointerleave", () => { hovObj = null; if (tooltip) tooltip.style.display = "none"; });
 
     const graphWrap = graphCanvas.parentElement;
+    // Use ResizeObserver only to do an initial setup once the canvas has a real size.
+    // After that, rely on the window resize listener so the observer stays connected.
     const ro = new ResizeObserver(entries => {
       const { width, height } = entries[0].contentRect;
-      if (width > 10 && height > 10) { setupGraph(); ro.disconnect(); }
+      if (width > 10 && height > 10) { setupGraph(); }
     });
     ro.observe(graphWrap);
     requestAnimationFrame(() => {
       const r = graphWrap.getBoundingClientRect();
-      if (r.width > 10 && r.height > 10) { setupGraph(); ro.disconnect(); }
+      if (r.width > 10 && r.height > 10) { setupGraph(); }
     });
     window.addEventListener("resize", () => { clearTimeout(window.__nrt); window.__nrt = setTimeout(setupGraph, 150); });
 
