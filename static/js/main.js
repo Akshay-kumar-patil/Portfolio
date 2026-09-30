@@ -38,22 +38,22 @@ async function boot() {
   } else if (summaryList) {
     setText("summary-list", data.summary || "");
   }
-  setText("contact-email", data.contact.email);
+  setText("contact-email", data.contact?.email ?? "");
 
   const links = ["github-link", "footer-github"];
   links.forEach((id) => {
     const node = document.getElementById(id);
-    if (node) node.href = data.contact.github;
+    if (node && data.contact?.github) node.href = data.contact.github;
   });
 
   ["linkedin-link", "footer-linkedin"].forEach((id) => {
     const node = document.getElementById(id);
-    if (node) node.href = data.contact.linkedin;
+    if (node && data.contact?.linkedin) node.href = data.contact.linkedin;
   });
 
   ["resume-link", "footer-resume"].forEach((id) => {
     const node = document.getElementById(id);
-    if (node) node.href = data.contact.resume;
+    if (node && data.contact?.resume) node.href = data.contact.resume;
   });
 
   const heroChips = document.getElementById("hero-chips");
