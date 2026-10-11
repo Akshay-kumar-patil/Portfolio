@@ -1,0 +1,1066 @@
+/* ============================================================
+   PUBG THEME — Complete Portfolio Override
+   PlayerUnknown's Battlegrounds tactical aesthetic
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Oswald:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Bebas+Neue&display=swap');
+
+/* ── Design Tokens ───────────────────────────────────────── */
+:root {
+  --pubg-bg-1:        #0a0800;
+  --pubg-bg-2:        #120e02;
+  --pubg-bg-3:        #1c1500;
+  --pubg-amber:       #e8a628;
+  --pubg-amber-2:     #f5c842;
+  --pubg-amber-dim:   #a06e10;
+  --pubg-orange:      #d4621a;
+  --pubg-red:         #c0392b;
+  --pubg-ink:         #f0e4c4;
+  --pubg-ink-dim:     #a8936a;
+  --pubg-surface:     rgba(20, 16, 2, 0.82);
+  --pubg-surface-2:   rgba(30, 24, 4, 0.94);
+  --pubg-border:      rgba(232, 166, 40, 0.30);
+  --pubg-border-glow: rgba(232, 166, 40, 0.60);
+  --pubg-shadow:      0 16px 48px rgba(0, 0, 0, 0.70);
+  --pubg-glow:        0 0 20px rgba(232, 166, 40, 0.35);
+  --display-font:     'Oswald', 'Bebas Neue', 'Impact', sans-serif;
+  --body-font:        'Rajdhani', 'Segoe UI', system-ui, sans-serif;
+  --mono-font:        'Share Tech Mono', 'JetBrains Mono', monospace;
+}
+
+/* ── Base Overrides ──────────────────────────────────────── */
+body {
+  background: #0a0800 !important;
+  color: var(--pubg-ink) !important;
+  font-family: var(--body-font) !important;
+  letter-spacing: 0.03em;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  background: url('/static/img/pubg_loading_bg.jpg') center center / cover no-repeat;
+  filter: brightness(0.18) saturate(0.6);
+  pointer-events: none;
+}
+
+/* Tactical noise grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 150px;
+}
+
+/* ── PUBG Loading Screen ─────────────────────────────────── */
+.opening-screen {
+  background: #000 !important;
+  overflow: hidden;
+}
+
+.opening-scene {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Full cinematic background */
+.opening-bg {
+  background-image: url('/static/img/pubg_loading_bg.jpg') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  filter: brightness(0.55) saturate(0.85);
+  animation: pubgBgPan 20s ease-in-out infinite alternate !important;
+  transform: scale(1.06) !important;
+}
+
+.opening-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.20) 40%, rgba(0,0,0,0.15) 100%),
+    radial-gradient(ellipse at 50% 100%, rgba(232,166,40,0.15) 0%, transparent 60%) !important;
+  mix-blend-mode: normal !important;
+  z-index: 1;
+}
+
+/* Floating particles - bullet casings / dust */
+.floating-particles {
+  background:
+    radial-gradient(circle at 20% 35%, rgba(232,166,40,0.55), rgba(232,166,40,0) 12%),
+    radial-gradient(circle at 68% 22%, rgba(245,200,66,0.40), rgba(245,200,66,0) 8%),
+    radial-gradient(circle at 82% 60%, rgba(212,98,26,0.35), rgba(212,98,26,0) 10%),
+    radial-gradient(circle at 40% 72%, rgba(232,166,40,0.28), rgba(232,166,40,0) 9%) !important;
+  opacity: 0.7 !important;
+  z-index: 2;
+}
+
+/* Opening copy panel - PUBG HUD style */
+.opening-copy {
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  width: 100% !important;
+  padding: 0 !important;
+  z-index: 10;
+}
+
+/* ── PUBG Loading Screen Full Custom Layout ──────────────── */
+#pubg-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: opacity 800ms ease, visibility 800ms ease;
+}
+
+#pubg-loading-overlay.hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.pubg-cinematic-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/static/img/pubg_programmer_clean.jpg');
+  background-size: cover;
+  background-position: center bottom;
+  animation: pubgBreath 14s ease-in-out infinite alternate;
+  filter: brightness(0.92) saturate(1.08);
+}
+
+.pubg-cinematic-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.50) 28%, transparent 58%),
+    radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(0,0,0,0.55) 100%);
+}
+
+/* Scan line effect */
+.pubg-cinematic-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.06) 2px,
+    rgba(0,0,0,0.06) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pubg-soldier-art {
+  display: none !important;
+}
+
+/* Bottom HUD wrapper - full width at the bottom */
+.pubg-bottom-hud {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding-bottom: 3.5vh;
+  pointer-events: none;
+}
+
+/* PLAYERUNKNOWN'S / BATTLEGROUNDS style name */
+.pubg-name-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  pointer-events: none;
+  user-select: none;
+  width: min(92vw, 680px);
+}
+
+.pubg-name-small {
+  margin: 0 0 4px 0;
+  font-family: 'Cinzel', 'Oswald', 'Rajdhani', serif;
+  font-size: clamp(0.95rem, 2.1vw, 1.55rem);
+  font-weight: 800;
+  letter-spacing: 0.42em;
+  padding-left: 0.42em;
+  color: #f7e6c4;
+  text-transform: uppercase;
+  line-height: 1;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+  text-shadow:
+    0 0 16px rgba(232, 166, 40, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.95);
+}
+
+.pubg-name-large {
+  margin: 0;
+  font-family: 'Bebas Neue', 'Oswald', sans-serif;
+  font-size: clamp(3.8rem, 8.5vw, 6.6rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  padding-left: 0.14em;
+  line-height: 0.88;
+  color: #f5af19;
+  background: linear-gradient(180deg, #fff3c6 0%, #e8a628 45%, #b56c06 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 25px rgba(232, 166, 40, 0.65))
+          drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.95));
+  -webkit-text-stroke: 1.2px rgba(255, 225, 120, 0.35);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* Loading bar zone */
+/* Loading bar zone */
+.pubg-hud-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(620px, 92vw);
+  pointer-events: auto;
+}
+
+.pubg-tip-text {
+  font-family: var(--mono-font);
+  font-size: clamp(0.70rem, 1.6vw, 0.84rem);
+  color: var(--pubg-ink-dim);
+  letter-spacing: 0.05em;
+  text-align: center;
+  margin: 0;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+}
+
+.pubg-tip-text strong {
+  color: var(--pubg-amber);
+  font-weight: 700;
+}
+
+/* ── PUBG Straight White Line Track with Running Buggy ── */
+.pubg-track-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  width: 100%;
+  margin: 4px 0 8px 0;
+}
+
+.pubg-line-wrapper {
+  position: relative;
+  flex: 1;
+  height: 36px;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Straight thin white track line */
+.pubg-straight-line-bg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.15);
+}
+
+/* Active solid white line that grows with progress */
+.pubg-straight-line-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2.5px;
+  width: 0%;
+  background: #ffffff;
+  box-shadow:
+    0 0 8px #ffffff,
+    0 0 16px rgba(232, 166, 40, 0.65);
+  pointer-events: none;
+}
+
+/* ── The Buggy Vehicle that runs on the line ── */
+.pubg-buggy-runner {
+  position: absolute;
+  bottom: 1px;
+  left: 0;
+  width: 68px;
+  height: 30px;
+  pointer-events: none;
+  z-index: 5;
+  will-change: left;
+}
+
+.pubg-buggy-svg {
+  width: 68px;
+  height: 30px;
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.85));
+}
+
+.pubg-buggy-runner:not(.parked) .pubg-buggy-svg {
+  animation: buggyChassisBounce 0.22s ease-in-out infinite alternate;
+}
+
+@keyframes buggyChassisBounce {
+  0%   { transform: translateY(0px) rotate(0deg); }
+  50%  { transform: translateY(-1.2px) rotate(-0.6deg); }
+  100% { transform: translateY(0.4px) rotate(0.4deg); }
+}
+
+/* Rotating buggy wheels */
+.buggy-wheel {
+  animation: buggyWheelSpin 0.3s linear infinite;
+}
+.buggy-wheel--rear {
+  transform-origin: 15px 24px;
+}
+.buggy-wheel--front {
+  transform-origin: 49px 24px;
+}
+
+@keyframes buggyWheelSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.pubg-buggy-runner.parked .buggy-wheel {
+  animation-play-state: paused;
+}
+.pubg-buggy-runner.parked .pubg-buggy-svg {
+  animation: none;
+}
+.pubg-buggy-runner.parked .pubg-buggy-dust {
+  opacity: 0;
+}
+
+/* Dust particles kicked up behind the rear tire */
+.pubg-buggy-dust {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  width: 22px;
+  height: 12px;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.dust-particle {
+  position: absolute;
+  background: rgba(232, 166, 40, 0.7);
+  border-radius: 50%;
+  animation: dustPuff 0.38s ease-out infinite;
+}
+.dust-1 { width: 3.5px; height: 3.5px; bottom: 2px; left: 0; animation-delay: 0s; }
+.dust-2 { width: 4.5px; height: 4.5px; bottom: 4px; left: -5px; animation-delay: 0.12s; }
+.dust-3 { width: 3px; height: 3px; bottom: 3px; left: -9px; animation-delay: 0.24s; }
+
+@keyframes dustPuff {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(-12px, -6px) scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* ── End of Line: Loading Percentage ── */
+.pubg-end-pct {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 52px;
+  flex-shrink: 0;
+  padding-bottom: 0px;
+}
+
+.pubg-loading-pct {
+  font-family: var(--mono-font);
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.08em;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.7),
+    0 0 16px rgba(232, 166, 40, 0.6);
+  user-select: none;
+}
+
+/* Corner HUD decorations */
+.pubg-corner {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  z-index: 11;
+}
+
+.pubg-corner--tl { top: 16px; left: 16px; border-top: 2px solid var(--pubg-amber); border-left: 2px solid var(--pubg-amber); }
+.pubg-corner--tr { top: 16px; right: 16px; border-top: 2px solid var(--pubg-amber); border-right: 2px solid var(--pubg-amber); }
+.pubg-corner--bl { bottom: 16px; left: 16px; border-bottom: 2px solid var(--pubg-amber); border-left: 2px solid var(--pubg-amber); }
+.pubg-corner--br { bottom: 16px; right: 16px; border-bottom: 2px solid var(--pubg-amber); border-right: 2px solid var(--pubg-amber); }
+
+.pubg-enter-btn {
+  font-family: var(--display-font);
+  font-size: clamp(0.85rem, 1.8vw, 1rem);
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: #0a0800;
+  background: linear-gradient(135deg, var(--pubg-amber-2), var(--pubg-amber));
+  border: none;
+  padding: 12px 36px;
+  cursor: pointer;
+  position: relative;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  transition: background 200ms, box-shadow 200ms, transform 150ms;
+  font-weight: 700;
+  box-shadow: 0 6px 24px rgba(232,166,40,0.5);
+  opacity: 0;
+  animation: pubgBtnAppear 600ms ease 3.6s forwards;
+}
+
+.pubg-enter-btn:hover {
+  background: linear-gradient(135deg, #fff5ca, var(--pubg-amber-2));
+  box-shadow: 0 8px 32px rgba(232,166,40,0.7);
+  transform: translateY(-2px);
+}
+
+/* ── Site Background (post-loading) ──────────────────────── */
+.site-bg {
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.75), rgba(0,0,0,0.55)),
+    url('/static/img/pubg_loading_bg.jpg') center center / cover no-repeat !important;
+  filter: brightness(0.28) saturate(0.55) contrast(1.1) !important;
+  transform: scale(1.05) !important;
+}
+
+.site-bg::after {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(232,166,40,0.12), transparent 28%),
+    radial-gradient(circle at 85% 20%, rgba(212,98,26,0.10), transparent 32%),
+    linear-gradient(180deg, rgba(10,8,0,0.22), rgba(5,4,0,0.50)) !important;
+}
+
+/* ── Eyebrow text ────────────────────────────────────────── */
+.eyebrow {
+  color: var(--pubg-amber) !important;
+  text-shadow: 0 0 14px rgba(232,166,40,0.55) !important;
+  letter-spacing: 0.30em !important;
+}
+
+/* ── Glass panels ────────────────────────────────────────── */
+.glass {
+  background:
+    linear-gradient(160deg, rgba(18,14,2,0.90), rgba(10,8,0,0.82)) !important;
+  border: 1px solid var(--pubg-border) !important;
+  box-shadow:
+    var(--pubg-shadow),
+    inset 0 1px 0 rgba(232,166,40,0.08),
+    0 0 0 1px rgba(232,166,40,0.04) !important;
+  backdrop-filter: blur(18px) !important;
+  border-radius: 2px !important;
+}
+
+/* ── Typography ──────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: var(--display-font) !important;
+  letter-spacing: 0.05em !important;
+  font-weight: 700 !important;
+}
+
+.section-heading h3 {
+  color: var(--pubg-ink) !important;
+  text-transform: uppercase !important;
+  font-size: clamp(1.4rem, 3vw, 2rem) !important;
+}
+
+.section-heading h3::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--pubg-amber), transparent);
+  margin-top: 8px;
+}
+
+/* ── Hero ────────────────────────────────────────────────── */
+.hero-kicker {
+  font-family: var(--mono-font) !important;
+  color: var(--pubg-amber) !important;
+  text-shadow: 0 0 16px rgba(232,166,40,0.6) !important;
+  letter-spacing: 0.35em !important;
+  font-size: 0.72rem !important;
+}
+
+.tech-hero-title {
+  font-family: 'Bebas Neue', 'Oswald', 'Impact', sans-serif !important;
+  font-size: clamp(3.2rem, 8vw, 6.5rem) !important;
+  line-height: 0.92 !important;
+  letter-spacing: 0.04em !important;
+  color: #fff !important;
+  text-shadow: 0 0 50px rgba(232,166,40,0.30) !important;
+}
+
+.name-first {
+  color: var(--pubg-amber-2) !important;
+  text-shadow: 0 0 30px rgba(245,200,66,0.55), 0 0 60px rgba(232,166,40,0.25) !important;
+  display: block !important;
+  -webkit-text-stroke: 1px rgba(245,200,66,0.25);
+}
+
+.name-mid {
+  color: rgba(240,228,196,0.70) !important;
+  font-size: 0.55em !important;
+  letter-spacing: 0.25em !important;
+}
+
+.name-last {
+  color: var(--pubg-ink) !important;
+}
+
+.hero-bio {
+  color: var(--pubg-ink-dim) !important;
+  font-size: 1.05rem !important;
+  line-height: 1.6 !important;
+  font-weight: 500 !important;
+}
+
+/* Hero chips */
+.hero-chips .chip,
+.tech-chips .chip {
+  background: rgba(232,166,40,0.12) !important;
+  border: 1px solid var(--pubg-border) !important;
+  color: var(--pubg-amber) !important;
+  font-family: var(--mono-font) !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.12em !important;
+  border-radius: 0 !important;
+  clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%) !important;
+}
+
+/* Hero buttons */
+.tech-btn,
+.button,
+.enter-button {
+  font-family: var(--display-font) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+  border-radius: 0 !important;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%) !important;
+  transition: all 180ms ease !important;
+}
+
+.tech-btn {
+  background: rgba(232,166,40,0.14) !important;
+  border: 1px solid var(--pubg-border) !important;
+  color: var(--pubg-amber) !important;
+  box-shadow: none !important;
+}
+
+.tech-btn:hover {
+  background: rgba(232,166,40,0.28) !important;
+  border-color: var(--pubg-amber) !important;
+  box-shadow: 0 0 20px rgba(232,166,40,0.30) !important;
+  transform: translateY(-2px) !important;
+}
+
+.resume-btn,
+.button.primary {
+  background: linear-gradient(135deg, var(--pubg-amber-dim), var(--pubg-amber)) !important;
+  color: #0a0800 !important;
+  border: none !important;
+  font-weight: 700 !important;
+  box-shadow: 0 6px 20px rgba(232,166,40,0.40) !important;
+}
+
+.resume-btn:hover,
+.button.primary:hover {
+  background: linear-gradient(135deg, var(--pubg-amber), var(--pubg-amber-2)) !important;
+  box-shadow: 0 8px 28px rgba(232,166,40,0.60) !important;
+}
+
+.button.secondary {
+  background: transparent !important;
+  border: 1px solid var(--pubg-border) !important;
+  color: var(--pubg-amber) !important;
+}
+
+/* ── Cards ───────────────────────────────────────────────── */
+.card {
+  background: linear-gradient(160deg, rgba(22,18,3,0.95), rgba(14,11,0,0.90)) !important;
+  border: 1px solid var(--pubg-border) !important;
+  border-radius: 2px !important;
+  box-shadow: var(--pubg-shadow) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--pubg-amber), transparent 70%);
+  opacity: 0.7;
+}
+
+.card-label,
+.card h4 {
+  font-family: var(--display-font) !important;
+  color: var(--pubg-amber) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+}
+
+.tag {
+  background: rgba(232,166,40,0.12) !important;
+  border: 1px solid rgba(232,166,40,0.25) !important;
+  color: var(--pubg-amber) !important;
+  border-radius: 0 !important;
+  font-family: var(--mono-font) !important;
+  font-size: 0.68rem !important;
+}
+
+/* ── Skills ──────────────────────────────────────────────── */
+.skill-bar-fill {
+  background: linear-gradient(90deg, var(--pubg-amber-dim), var(--pubg-amber)) !important;
+  box-shadow: 0 0 8px rgba(232,166,40,0.45) !important;
+}
+
+.skill-bar {
+  background: rgba(232,166,40,0.10) !important;
+  border-radius: 0 !important;
+}
+
+.skill-label {
+  font-family: var(--mono-font) !important;
+  color: var(--pubg-ink-dim) !important;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+/* ── Stats ───────────────────────────────────────────────── */
+.metric-val {
+  color: var(--pubg-amber-2) !important;
+  font-family: 'Bebas Neue', var(--display-font) !important;
+  font-size: clamp(2rem, 4vw, 3rem) !important;
+  text-shadow: 0 0 20px rgba(232,166,40,0.50) !important;
+}
+
+.metric-label {
+  color: var(--pubg-ink-dim) !important;
+  font-family: var(--mono-font) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+  font-size: 0.68rem !important;
+}
+
+/* ── Contact ─────────────────────────────────────────────── */
+.contact-strip {
+  background: rgba(18,14,2,0.92) !important;
+  border: 1px solid var(--pubg-border) !important;
+  border-radius: 2px !important;
+}
+
+#contact-email {
+  color: var(--pubg-amber) !important;
+  font-family: var(--mono-font) !important;
+}
+
+/* ── Badges ──────────────────────────────────────────────── */
+.badge {
+  background: rgba(22,18,3,0.95) !important;
+  border: 1px solid var(--pubg-border) !important;
+  border-radius: 2px !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.badge::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, rgba(232,166,40,0.06) 0%, transparent 60%);
+}
+
+.badge-title {
+  color: var(--pubg-amber) !important;
+  font-family: var(--display-font) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+}
+
+/* ── Neural Activity ─────────────────────────────────────── */
+.neural-activity-section {
+  border: 1px solid var(--pubg-border) !important;
+}
+
+.canvas-label,
+.prob-title,
+.output-label {
+  font-family: var(--mono-font) !important;
+  color: var(--pubg-amber) !important;
+  letter-spacing: 0.18em !important;
+}
+
+.clear-btn {
+  background: rgba(232,166,40,0.12) !important;
+  border: 1px solid var(--pubg-border) !important;
+  color: var(--pubg-amber) !important;
+  border-radius: 0 !important;
+  font-family: var(--mono-font) !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
+.clear-btn:hover {
+  background: rgba(232,166,40,0.25) !important;
+  border-color: var(--pubg-amber) !important;
+}
+
+.prediction-value {
+  color: var(--pubg-amber-2) !important;
+  font-family: 'Bebas Neue', var(--display-font) !important;
+  text-shadow: 0 0 30px rgba(245,200,66,0.55) !important;
+}
+
+.confidence-badge {
+  background: linear-gradient(135deg, rgba(232,166,40,0.20), rgba(232,166,40,0.08)) !important;
+  border: 1px solid var(--pubg-border) !important;
+  color: var(--pubg-amber) !important;
+  border-radius: 0 !important;
+  font-family: var(--mono-font) !important;
+}
+
+.prob-bar-fill {
+  background: linear-gradient(90deg, var(--pubg-amber-dim), var(--pubg-amber-2)) !important;
+  box-shadow: 0 0 6px rgba(232,166,40,0.40) !important;
+}
+
+.prob-bar {
+  background: rgba(232,166,40,0.10) !important;
+  border-radius: 0 !important;
+}
+
+.graph-header {
+  background: rgba(10,8,0,0.90) !important;
+  border-bottom: 1px solid var(--pubg-border) !important;
+  color: var(--pubg-amber) !important;
+  font-family: var(--mono-font) !important;
+  letter-spacing: 0.15em !important;
+  font-size: 0.72rem !important;
+}
+
+.pulse-dot {
+  background: var(--pubg-amber) !important;
+  box-shadow: 0 0 8px var(--pubg-amber) !important;
+}
+
+.output-prediction-card {
+  background: rgba(18,14,2,0.95) !important;
+  border: 1px solid var(--pubg-border) !important;
+  border-radius: 2px !important;
+}
+
+.neural-tooltip {
+  background: rgba(10,8,0,0.96) !important;
+  border: 1px solid var(--pubg-border) !important;
+  border-radius: 2px !important;
+  font-family: var(--mono-font) !important;
+  color: var(--pubg-ink-dim) !important;
+}
+
+/* ── Matrix Footer ───────────────────────────────────────── */
+.matrix-fabric-section {
+  background: rgba(10,8,0,0.92) !important;
+}
+
+.matrix-badge {
+  border: 1px solid var(--pubg-border) !important;
+  background: rgba(232,166,40,0.08) !important;
+  color: var(--pubg-amber) !important;
+  border-radius: 0 !important;
+  font-family: var(--mono-font) !important;
+}
+
+.footer-links {
+  color: var(--pubg-ink-dim) !important;
+  font-family: var(--mono-font) !important;
+  letter-spacing: 0.10em !important;
+}
+
+.footer-links a {
+  color: var(--pubg-amber) !important;
+  text-decoration: none !important;
+  transition: color 200ms ease, text-shadow 200ms ease;
+}
+
+.footer-links a:hover {
+  color: var(--pubg-amber-2) !important;
+  text-shadow: 0 0 12px rgba(232,166,40,0.55) !important;
+}
+
+/* ── Storm alert ─────────────────────────────────────────── */
+.storm-alert {
+  background: rgba(14,11,0,0.96) !important;
+  border: 1px solid var(--pubg-border) !important;
+  color: var(--pubg-ink) !important;
+  border-radius: 2px !important;
+}
+
+.storm-alert h2 {
+  color: var(--pubg-amber-2) !important;
+  font-family: var(--display-font) !important;
+}
+
+/* ── Resume Modal ────────────────────────────────────────── */
+.resume-card {
+  background: rgba(10,8,0,0.98) !important;
+  border: 1px solid var(--pubg-border) !important;
+  border-radius: 2px !important;
+}
+
+.resume-toolbar {
+  background: rgba(18,14,2,0.95) !important;
+  border-bottom: 1px solid var(--pubg-border) !important;
+}
+
+.resume-toolbar h3 {
+  color: var(--pubg-amber) !important;
+  font-family: var(--display-font) !important;
+  text-transform: uppercase !important;
+}
+
+/* ── Domain mastery ──────────────────────────────────────── */
+.domain-item {
+  border-bottom: 1px solid rgba(232,166,40,0.12) !important;
+}
+
+.domain-label {
+  color: var(--pubg-ink-dim) !important;
+  font-family: var(--mono-font) !important;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.10em !important;
+  text-transform: uppercase !important;
+}
+
+.domain-pct {
+  color: var(--pubg-amber) !important;
+  font-family: var(--mono-font) !important;
+  font-weight: normal !important;
+}
+
+.domain-fill {
+  background: linear-gradient(90deg, var(--pubg-amber-dim), var(--pubg-amber)) !important;
+  box-shadow: 0 0 6px rgba(232,166,40,0.35) !important;
+}
+
+.map-area {
+  fill: rgba(232,166,40,0.12) !important;
+}
+
+.map-line {
+  stroke: var(--pubg-amber) !important;
+  fill: none !important;
+}
+
+.map-points circle {
+  fill: var(--pubg-amber-2) !important;
+}
+
+.map-grid circle,
+.map-grid path {
+  stroke: rgba(232,166,40,0.18) !important;
+}
+
+/* ── Project links ───────────────────────────────────────── */
+.project-link {
+  color: var(--pubg-amber) !important;
+  border-bottom: 1px solid rgba(232,166,40,0.30) !important;
+  text-transform: uppercase !important;
+  font-family: var(--mono-font) !important;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.12em !important;
+}
+
+.project-link:hover {
+  color: var(--pubg-amber-2) !important;
+  text-shadow: 0 0 10px rgba(232,166,40,0.45) !important;
+  border-color: var(--pubg-amber) !important;
+}
+
+/* ── Cursor glow ─────────────────────────────────────────── */
+.cursor-glow {
+  background:
+    radial-gradient(circle at center, rgba(232,166,40,0.65), rgba(232,166,40,0.35) 28%, rgba(212,98,26,0.15) 52%, transparent 76%) !important;
+}
+
+/* ── Wind leaves -> shell casings ────────────────────────── */
+.wind-leaf {
+  background:
+    linear-gradient(135deg, rgba(200,160,60,0.90), rgba(140,100,30,0.75)) !important;
+  border-radius: 3px 1px 3px 1px !important;
+  box-shadow: 0 0 6px rgba(200,160,60,0.20) !important;
+}
+
+/* ── Winner Winner Easter Egg ────────────────────────────── */
+#winner-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  z-index: 1000;
+  background: linear-gradient(135deg, rgba(18,14,2,0.98), rgba(28,21,0,0.98));
+  border: 1px solid var(--pubg-amber);
+  box-shadow: 0 0 40px rgba(232,166,40,0.45), var(--pubg-shadow);
+  padding: 16px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  opacity: 0;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1), opacity 400ms ease;
+  pointer-events: none;
+}
+
+#winner-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+#winner-toast .winner-text {
+  font-family: 'Bebas Neue', var(--display-font);
+  font-size: 1.6rem;
+  letter-spacing: 0.25em;
+  color: var(--pubg-amber-2);
+  text-shadow: 0 0 20px rgba(245,200,66,0.70);
+}
+
+#winner-toast .winner-sub {
+  font-family: var(--mono-font);
+  font-size: 0.72rem;
+  color: var(--pubg-ink-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* ── Drawing guide notes ─────────────────────────────────── */
+.drawing-guide-note {
+  background: rgba(18,14,2,0.90) !important;
+  border: 1px solid rgba(232,166,40,0.20) !important;
+  border-radius: 2px !important;
+}
+
+.guide-note-item p {
+  color: var(--pubg-ink-dim) !important;
+  font-size: 0.82rem !important;
+}
+
+.guide-note-item strong {
+  color: var(--pubg-amber) !important;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0a0800; }
+::-webkit-scrollbar-thumb { background: var(--pubg-amber-dim); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--pubg-amber); }
+
+/* ── Keyframes ───────────────────────────────────────────── */
+@keyframes pubgBreath {
+  0%   { transform: scale(1.0); }
+  100% { transform: scale(1.03); }
+}
+
+@keyframes pubgBgPan {
+  0%   { background-position: 52% center; }
+  100% { background-position: 48% center; }
+}
+
+@keyframes soldierFloat {
+  0%   { transform: translateY(0px); }
+  100% { transform: translateY(-12px); }
+}
+
+@keyframes pubgLoad {
+  0%   { width: 0%; }
+  15%  { width: 22%; }
+  45%  { width: 58%; }
+  70%  { width: 76%; }
+  88%  { width: 91%; }
+  100% { width: 100%; }
+}
+
+@keyframes blinkText {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.40; }
+}
+
+@keyframes pubgBtnAppear {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sceneDrift {
+  0%   { transform: scale(1.08) translate(0px, 0px); }
+  100% { transform: scale(1.08) translate(-6px, -4px); }
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .pubg-soldier-art {
+    display: none !important;
+  }
+
+  .pubg-name-large {
+    font-size: clamp(2.8rem, 14vw, 4.6rem);
+    letter-spacing: 0.10em;
+    padding-left: 0.10em;
+  }
+
+  .pubg-name-small {
+    font-size: clamp(0.75rem, 3.2vw, 1.1rem);
+    letter-spacing: 0.32em;
+    padding-left: 0.32em;
+  }
+
+  .pubg-corner {
+    width: 24px;
+    height: 24px;
+  }
+}
+
