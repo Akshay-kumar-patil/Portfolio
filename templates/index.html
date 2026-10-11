@@ -4,14 +4,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Akshay Kumar Patil | Ghibli Portfolio</title>
-  <meta name="description" content="A Ghibli-inspired responsive portfolio for Akshay Kumar Patil." />
+  <title>Akshay Kumar Patil | Portfolio</title>
+  <meta name="description" content="AI/ML developer portfolio for Akshay Kumar Patil — RAG applications, ML/DL models, and AI-powered solutions." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Audiowide&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@700;800;900&family=Oxanium:wght@600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Audiowide&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@700;800;900&family=Oswald:wght@400;500;600;700&family=Oxanium:wght@600;700;800&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/pubg-theme.css" />
 </head>
 
 <body style="--scene-bg: url('{{SCENE_BG_URL}}');">
@@ -32,19 +33,108 @@
       <button class="button primary" id="reset-storm" type="button">Reset everything</button>
     </div>
   </div>
-  <div class="opening-screen" id="opening-screen" aria-hidden="false">
-    <div class="opening-scene">
-      <div class="opening-bg"></div>
-      <div class="opening-vignette"></div>
-      <div class="floating-particles"></div>
-      <div class="opening-copy">
-        <p class="eyebrow">Welcome to the valley</p>
-        <h1>Akshay Kumar Patil</h1>
-        <p>AI / ML developer, focused on performant RAG applications, ML / DL models, and AI-powered solutions.</p>
-        <button class="enter-button" id="enter-button" type="button">Enter the portfolio</button>
+  <!-- PUBG Cinematic Loading Screen -->
+  <div id="pubg-loading-overlay" aria-hidden="false" role="presentation">
+    <div class="pubg-cinematic-bg"></div>
+
+    <!-- Corner HUD brackets -->
+    <div class="pubg-corner pubg-corner--tl"></div>
+    <div class="pubg-corner pubg-corner--tr"></div>
+    <div class="pubg-corner pubg-corner--bl"></div>
+    <div class="pubg-corner pubg-corner--br"></div>
+
+
+    <!-- Bottom overlay: name + loading bar -->
+    <div class="pubg-bottom-hud">
+      <!-- Name styled exactly like PLAYERUNKNOWN'S / BATTLEGROUNDS -->
+      <div class="pubg-name-block">
+        <p class="pubg-name-small">AKSHAY KUMAR</p>
+        <h1 class="pubg-name-large">PATIL</h1>
+      </div>
+
+      <!-- Loading bar + tip -->
+      <div class="pubg-hud-bar">
+        <p class="pubg-tip-text"><strong>TIP:</strong> Scroll to the Neural Activity section and draw a digit to see live CNN inference.</p>
+        
+        <!-- Classic PUBG straight white line loading with running buggy -->
+        <div class="pubg-track-container">
+          <div class="pubg-line-wrapper">
+            <!-- Straight white background track line -->
+            <div class="pubg-straight-line-bg"></div>
+            <!-- Active filled white line -->
+            <div class="pubg-straight-line-fill" id="pubg-loading-fill"></div>
+            <!-- Running Buggy vehicle -->
+            <div class="pubg-buggy-runner" id="pubg-buggy">
+              <svg class="pubg-buggy-svg" viewBox="0 0 68 30" width="68" height="30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <defs>
+                  <linearGradient id="buggyBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#c95514"/>
+                    <stop offset="50%" stop-color="#e8a628"/>
+                    <stop offset="100%" stop-color="#f7cb45"/>
+                  </linearGradient>
+                  <linearGradient id="headlightBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="rgba(255,248,190,0.85)"/>
+                    <stop offset="100%" stop-color="rgba(255,248,190,0)"/>
+                  </linearGradient>
+                </defs>
+                <!-- Forward Headlight beam projection -->
+                <polygon points="60,17 78,12 78,25 60,21" fill="url(#headlightBeam)" opacity="0.6"/>
+                <!-- Rear spare tire mounted on roll cage -->
+                <ellipse cx="8" cy="13" rx="3.2" ry="5.5" transform="rotate(-20 8 13)" fill="#181512" stroke="#d4621a" stroke-width="1"/>
+                <!-- Driver inside roll cage with Level 3 helmet -->
+                <circle cx="26" cy="11.5" r="3.2" fill="#dcdcdc"/>
+                <rect x="26.8" y="10.8" width="3" height="1.6" rx="0.5" fill="#e8a628"/>
+                <path d="M 23 15 C 23 15, 25.5 17, 28 18" stroke="#ffffff" stroke-width="1.3" stroke-linecap="round"/>
+                <!-- Buggy chassis body panels -->
+                <path d="M 10 19 L 19 19 L 44 19 L 52 19 L 59 17 L 52 15 L 16 15 Z" fill="url(#buggyBodyGrad)"/>
+                <!-- Tubular roll cage frame -->
+                <polyline points="9,19 14,7 32,7 45,15 60,17" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="31" y1="7" x2="27" y2="19" stroke="#ffffff" stroke-width="1.3"/>
+                <line x1="14" y1="7" x2="20" y2="19" stroke="#ffffff" stroke-width="1.1"/>
+                <line x1="16" y1="5.5" x2="30" y2="5.5" stroke="#e8a628" stroke-width="1.2"/>
+                <!-- Front bullbar bumper -->
+                <path d="M 58 17 L 62 20 L 57 23" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+                <!-- Front headlight -->
+                <circle cx="59.5" cy="17.5" r="1.6" fill="#fffbe0"/>
+                <circle cx="59.5" cy="17.5" r="0.8" fill="#ffffff"/>
+                <!-- Rear Wheel -->
+                <g class="buggy-wheel buggy-wheel--rear">
+                  <circle cx="15" cy="24" r="5.2" fill="#14110e" stroke="#ffffff" stroke-width="1.3"/>
+                  <circle cx="15" cy="24" r="2.6" fill="#e8a628"/>
+                  <circle cx="15" cy="24" r="1" fill="#ffffff"/>
+                  <line x1="15" y1="19.5" x2="15" y2="28.5" stroke="#ffffff" stroke-width="0.9"/>
+                  <line x1="10.5" y1="24" x2="19.5" y2="24" stroke="#ffffff" stroke-width="0.9"/>
+                </g>
+                <!-- Front Wheel -->
+                <g class="buggy-wheel buggy-wheel--front">
+                  <circle cx="49" cy="24" r="5.2" fill="#14110e" stroke="#ffffff" stroke-width="1.3"/>
+                  <circle cx="49" cy="24" r="2.6" fill="#e8a628"/>
+                  <circle cx="49" cy="24" r="1" fill="#ffffff"/>
+                  <line x1="49" y1="19.5" x2="49" y2="28.5" stroke="#ffffff" stroke-width="0.9"/>
+                  <line x1="44.5" y1="24" x2="53.5" y2="24" stroke="#ffffff" stroke-width="0.9"/>
+                </g>
+              </svg>
+              <!-- Dust particles kicked up behind rear tire -->
+              <div class="pubg-buggy-dust" aria-hidden="true">
+                <span class="dust-particle dust-1"></span>
+                <span class="dust-particle dust-2"></span>
+                <span class="dust-particle dust-3"></span>
+              </div>
+            </div>
+          </div>
+          <!-- End-of-line loading percentage -->
+          <div class="pubg-end-pct">
+            <span class="pubg-loading-pct" id="pubg-loading-pct">0%</span>
+          </div>
+        </div>
+
+        <button class="pubg-enter-btn" id="enter-button" type="button" aria-label="Enter portfolio">Enter the Drop Zone</button>
       </div>
     </div>
   </div>
+
+  <!-- Legacy opening screen (hidden, kept for JS compat) -->
+  <div class="opening-screen hide" id="opening-screen" aria-hidden="true" style="display:none"></div>
 
   <main class="portfolio-shell">
     <header class="hero" id="hero">
@@ -286,6 +376,12 @@
 
   </main>
 
+  <!-- PUBG Winner Winner Easter Egg Toast -->
+  <div id="winner-toast" aria-live="polite" aria-atomic="true">
+    <span class="winner-text">WINNER WINNER CHICKEN DINNER</span>
+    <span class="winner-sub">#1 Viewed &mdash; Thanks for visiting</span>
+  </div>
+
   <div class="resume-modal" id="resume-modal" aria-hidden="true">
     <div class="resume-backdrop" id="resume-backdrop"></div>
     <section class="resume-card" role="dialog" aria-modal="true" aria-label="Resume preview">
@@ -303,6 +399,81 @@
 
   <script src="/static/js/mnist_weights.js"></script>
   <script src="/static/js/main.js"></script>
+  <script>
+    /* ── PUBG Loading Screen Controller ── */
+    (function () {
+      var overlay  = document.getElementById('pubg-loading-overlay');
+      var pctEl    = document.getElementById('pubg-loading-pct');
+      var fillEl   = document.getElementById('pubg-loading-fill');
+      var buggyEl  = document.getElementById('pubg-buggy');
+      var enterBtn = document.getElementById('enter-button');
+      var toast    = document.getElementById('winner-toast');
+
+      /* Animate the percentage counter, straight line fill, and buggy runner */
+      var start = null;
+      var DURATION = 3500;
+      var targets = [0, 22, 58, 76, 91, 100];
+
+      function animatePct(ts) {
+        if (!start) start = ts;
+        var elapsed = ts - start;
+        var prog = Math.min(elapsed / DURATION, 1);
+        /* Lerp through waypoints */
+        var segments = targets.length - 1;
+        var seg = Math.min(Math.floor(prog * segments), segments - 1);
+        var segProg = (prog * segments) - seg;
+        var val = Math.round(targets[seg] + (targets[seg+1] - targets[seg]) * segProg);
+
+        if (pctEl) pctEl.textContent = val + '%';
+        if (fillEl) fillEl.style.width = val + '%';
+        if (buggyEl) {
+          /* Buggy drives along the straight white line */
+          buggyEl.style.left = 'calc(' + val + '% - ' + (val * 0.68) + 'px)';
+          if (val >= 100) {
+            buggyEl.classList.add('parked');
+          }
+        }
+
+        if (prog < 1) {
+          requestAnimationFrame(animatePct);
+        } else {
+          if (pctEl) pctEl.textContent = '100%';
+          if (fillEl) fillEl.style.width = '100%';
+          if (buggyEl) {
+            buggyEl.style.left = 'calc(100% - 68px)';
+            buggyEl.classList.add('parked');
+          }
+        }
+      }
+      requestAnimationFrame(animatePct);
+
+      /* Enter button handler */
+      function enterPortfolio() {
+        if (overlay) {
+          overlay.classList.add('hide');
+          setTimeout(function() { overlay.style.display = 'none'; }, 900);
+        }
+        /* Show winner toast after 2.5s */
+        setTimeout(function() {
+          if (toast) {
+            toast.classList.add('show');
+            setTimeout(function() { toast.classList.remove('show'); }, 3500);
+          }
+        }, 2500);
+      }
+
+      if (enterBtn) {
+        enterBtn.addEventListener('click', enterPortfolio);
+        /* Also allow skipping with any key or tap after load bar completes */
+        setTimeout(function() {
+          document.addEventListener('keydown', function skip(e) {
+            document.removeEventListener('keydown', skip);
+            enterPortfolio();
+          }, { once: true });
+        }, 3800);
+      }
+    })();
+  </script>
 </body>
 
 </html>
