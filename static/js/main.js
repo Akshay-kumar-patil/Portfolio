@@ -1,689 +1,1033 @@
+/* ============================================================
+   PUBG MOBILE PORTFOLIO CONTROLLER
+   Manages: Lobby, Character Bay, Inventory System, Sound Effects,
+   Interactive Modals, and In-Browser LeNet-5 CNN Inference Demo
+   ============================================================ */
+
+/* ── Tactical Web Audio Synthesizer ────────────────────────── */
+const AudioController = {
+  ctx: null,
+  muted: false,
+
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
+    }
+  },
+
+  playClick() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(440, this.ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.04);
+    } catch (_) {}
+  },
+
+  playTab() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(900, this.ctx.currentTime + 0.06);
+      gain.gain.setValueAtTime(0.14, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.06);
+    } catch (_) {}
+  },
+
+  playEquip() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(520, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1040, this.ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.1);
+    } catch (_) {}
+  },
+
+  playStart() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      [440, 554, 659, 880].forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+        gain.gain.setValueAtTime(0.12, now + idx * 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.05);
+        osc.stop(now + idx * 0.05 + 0.3);
+      });
+    } catch (_) {}
+  }
+};
+
+/* ── Interactive 3D Character Drag-to-Rotate ─────────────── */
+function setupCharacterRotator(elementId) {
+  const rotator = document.getElementById(elementId);
+  if (!rotator) return;
+
+  let isDragging = false;
+  let startX = 0;
+  let currentRotation = 0;
+  let targetRotation = 0;
+  let velocity = 0;
+
+  function onPointerDown(e) {
+    isDragging = true;
+    startX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+    velocity = 0;
+    rotator.style.transition = "none";
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging) return;
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+    const deltaX = clientX - startX;
+    startX = clientX;
+    velocity = deltaX * 0.65;
+    targetRotation += velocity;
+  }
+
+  function onPointerUp() {
+    isDragging = false;
+  }
+
+  rotator.addEventListener("mousedown", onPointerDown);
+  rotator.addEventListener("touchstart", onPointerDown, { passive: true });
+  window.addEventListener("mousemove", onPointerMove);
+  window.addEventListener("touchmove", onPointerMove, { passive: true });
+  window.addEventListener("mouseup", onPointerUp);
+  window.addEventListener("touchend", onPointerUp);
+
+  function animate() {
+    if (!isDragging && Math.abs(velocity) > 0.01) {
+      velocity *= 0.92;
+      targetRotation += velocity;
+    }
+    currentRotation += (targetRotation - currentRotation) * 0.2;
+    rotator.style.transform = `rotateY(${currentRotation}deg)`;
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+}
+
+/* ── Main Application Bootstrapping ──────────────────────── */
 async function boot() {
-  const response = await fetch("/static/profile.json", { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`Profile request failed with ${response.status}`);
-  }
-  const data = await response.json();
-
-  const setText = (id, value) => {
-    const node = document.getElementById(id);
-    if (node) node.textContent = value;
-  };
-
-  const heroKicker = document.getElementById("hero-kicker");
-  if (heroKicker && data.hero?.kicker) {
-    heroKicker.textContent = data.hero.kicker;
+  let data = null;
+  try {
+    const response = await fetch("/static/profile.json", { cache: "no-store" });
+    if (response.ok) {
+      data = await response.json();
+    }
+  } catch (err) {
+    console.warn("Failed fetching profile.json, falling back to static cache", err);
   }
 
-  const heroNameNode = document.getElementById("hero-name");
-  if (heroNameNode) {
-    const firstName = data.hero?.name_first || "Akshay";
-    const midName = data.hero?.name_mid || "Kumar";
-    const lastName = data.hero?.name_last || "Patil";
-    heroNameNode.innerHTML = `<span class="name-first">${firstName}</span> <span class="name-mid">${midName}</span> <span class="name-last">${lastName}</span>`;
+  // Populate Top HUD data
+  if (data) {
+    const hudName = document.getElementById("hud-player-name");
+    if (hudName && data.name) hudName.textContent = data.name.toUpperCase();
+
+    const hudRole = document.getElementById("hud-player-role");
+    if (hudRole && data.title) hudRole.textContent = data.title.toUpperCase();
+
+    const chatMsg = document.getElementById("lobby-chat-msg");
+    if (chatMsg && data.hero?.bio) chatMsg.textContent = data.hero.bio;
+
+    if (Array.isArray(data.metrics)) {
+      data.metrics.forEach(m => {
+        if (m.label.toLowerCase().includes("project")) {
+          const el = document.getElementById("hud-res-projects");
+          if (el) el.textContent = m.value;
+        } else if (m.label.toLowerCase().includes("deploy")) {
+          const el = document.getElementById("hud-res-deploys");
+          if (el) el.textContent = m.value;
+        } else if (m.label.toLowerCase().includes("achieve")) {
+          const el = document.getElementById("hud-res-wins");
+          if (el) el.textContent = m.value;
+        }
+      });
+    }
+
+    if (Array.isArray(data.education) && data.education[0]?.metric) {
+      const cgpa = data.education[0].metric.replace(/[^0-9.]/g, "");
+      const el = document.getElementById("hud-res-cgpa");
+      if (el && cgpa) el.textContent = cgpa;
+    }
   }
 
-  const heroBioNode = document.getElementById("hero-bio");
-  if (heroBioNode) {
-    heroBioNode.textContent = data.hero?.bio || data.hero?.headline || (
-      "I build performant RAG applications, ML/DL models, LLM systems, and practical " +
-      "machine learning tools with clean demos, robust architectures, and production-ready workflows."
-    );
+  // Initialize Character Rotators
+  setupCharacterRotator("soldier-rotator-lobby");
+  setupCharacterRotator("soldier-rotator-inv");
+
+  // Screen Switching
+  const screenLobby = document.getElementById("screen-lobby");
+  const screenInventory = document.getElementById("screen-inventory");
+
+  function showLobby() {
+    AudioController.playClick();
+    if (screenInventory) screenInventory.classList.remove("active");
+    if (screenLobby) screenLobby.classList.add("active");
+    closeProjectGlassPanel();
   }
 
-  setText("headline", data.hero?.headline || "");
-  const summaryList = document.getElementById("summary-list");
-  if (summaryList && Array.isArray(data.summary_points)) {
-    summaryList.innerHTML = data.summary_points.map((point) => `<li>${point}</li>`).join("");
-  } else if (summaryList) {
-    setText("summary-list", data.summary || "");
+  function showInventory(targetCategory = null) {
+    if (screenLobby) screenLobby.classList.remove("active");
+    if (screenInventory) screenInventory.classList.add("active");
+    if (targetCategory) {
+      switchCategory(targetCategory);
+    }
   }
-  setText("contact-email", data.contact?.email ?? "");
 
-  const links = ["github-link", "footer-github"];
-  links.forEach((id) => {
-    const node = document.getElementById(id);
-    if (node && data.contact?.github) node.href = data.contact.github;
+  // Lobby Nav buttons
+  document.getElementById("nav-btn-inventory")?.addEventListener("click", () => {
+    AudioController.playEquip();
+    showInventory("weapons");
   });
 
-  ["linkedin-link", "footer-linkedin"].forEach((id) => {
-    const node = document.getElementById(id);
-    if (node && data.contact?.linkedin) node.href = data.contact.linkedin;
+  document.getElementById("start-inventory-btn")?.addEventListener("click", () => {
+    AudioController.playStart();
+    setTimeout(() => showInventory("weapons"), 180);
   });
 
-  ["resume-link", "footer-resume"].forEach((id) => {
-    const node = document.getElementById(id);
-    if (node && data.contact?.resume) node.href = data.contact.resume;
+  document.getElementById("inv-back-lobby-btn")?.addEventListener("click", showLobby);
+
+  // Audio Toggle
+  const sfxBtn = document.getElementById("sfx-toggle-btn");
+  const sfxIcon = document.getElementById("sfx-icon");
+  sfxBtn?.addEventListener("click", () => {
+    AudioController.muted = !AudioController.muted;
+    if (sfxIcon) sfxIcon.textContent = AudioController.muted ? "🔇" : "🔊";
   });
 
-  const heroChips = document.getElementById("hero-chips");
-  if (heroChips && data.hero?.chips) {
-    heroChips.innerHTML = data.hero.chips.map((item) => `<span class="tech-chip">${item}</span>`).join("");
+  // Modal Handlers
+  const labModal = document.getElementById("lab-modal");
+  const resumeModal = document.getElementById("resume-modal");
+  const careerModal = document.getElementById("career-modal");
+  const commsModal = document.getElementById("comms-modal");
+
+  function openModal(modal) {
+    AudioController.playClick();
+    modal?.classList.add("active");
+    modal?.setAttribute("aria-hidden", "false");
+    if (modal === labModal) {
+      setTimeout(() => window.dispatchEvent(new Event("resize")), 120);
+    }
   }
 
-  const heroMetrics = document.getElementById("hero-metrics");
-  if (heroMetrics) {
-    heroMetrics.innerHTML = data.metrics.map((metric) => `
-      <article class="metric-card">
-        <span class="metric-value">${metric.value}</span>
-        <span class="metric-label">${metric.label}</span>
-      </article>
-    `).join("");
+  function closeModal(modal) {
+    AudioController.playClick();
+    modal?.classList.remove("active");
+    modal?.setAttribute("aria-hidden", "true");
   }
 
-  const projectsGrid = document.getElementById("projects-grid");
-  if (projectsGrid) {
-    projectsGrid.innerHTML = data.projects.map((item) => `
-      <article class="card">
-        <h4>${item.name}</h4>
-        <p>${item.tagline}</p>
-        <a class="repo-link" href="${item.repo}" target="_blank" rel="noreferrer">View Repo</a>
-        <ul class="project-list">
-          ${item.details.map((detail) => `<li>${detail}</li>`).join("")}
-        </ul>
-      </article>
-    `).join("");
+  document.getElementById("nav-btn-lab")?.addEventListener("click", () => openModal(labModal));
+  document.getElementById("close-lab-btn")?.addEventListener("click", () => closeModal(labModal));
+  document.getElementById("lab-backdrop")?.addEventListener("click", () => closeModal(labModal));
+
+  document.getElementById("nav-btn-resume")?.addEventListener("click", () => openModal(resumeModal));
+  document.getElementById("close-resume-btn")?.addEventListener("click", () => closeModal(resumeModal));
+  document.getElementById("resume-backdrop")?.addEventListener("click", () => closeModal(resumeModal));
+
+  document.getElementById("nav-btn-career")?.addEventListener("click", () => {
+    renderCareerModal(data);
+    openModal(careerModal);
+  });
+  document.getElementById("close-career-btn")?.addEventListener("click", () => closeModal(careerModal));
+  document.getElementById("career-backdrop")?.addEventListener("click", () => closeModal(careerModal));
+
+  document.getElementById("nav-btn-contact")?.addEventListener("click", () => openModal(commsModal));
+  document.getElementById("squad-comms-btn")?.addEventListener("click", () => openModal(commsModal));
+  document.getElementById("close-comms-btn")?.addEventListener("click", () => closeModal(commsModal));
+  document.getElementById("comms-backdrop")?.addEventListener("click", () => closeModal(commsModal));
+
+  // Keyboard Shortcuts (ESC, I, M)
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (projectGlassPanel?.classList.contains("active")) {
+        closeProjectGlassPanel();
+        e.preventDefault();
+        return;
+      }
+      if (labModal?.classList.contains("active")) closeModal(labModal);
+      else if (resumeModal?.classList.contains("active")) closeModal(resumeModal);
+      else if (careerModal?.classList.contains("active")) closeModal(careerModal);
+      else if (commsModal?.classList.contains("active")) closeModal(commsModal);
+      else if (screenInventory?.classList.contains("active")) showLobby();
+    } else if (e.key === "i" || e.key === "I") {
+      if (!isDrawingActive()) {
+        if (screenInventory?.classList.contains("active")) showLobby();
+        else showInventory();
+      }
+    } else if (e.key === "m" || e.key === "M") {
+      if (!isDrawingActive()) {
+        if (labModal?.classList.contains("active")) closeModal(labModal);
+        else openModal(labModal);
+      }
+    }
+  });
+
+  function isDrawingActive() {
+    return document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA");
   }
 
-  const specialProject = document.getElementById("special-project");
-  if (specialProject && data.special_project) {
-    specialProject.innerHTML = `
-      <article class="card special-card">
-        <div class="special-badge">Special Mention</div>
-        <h4>${data.special_project.name}</h4>
-        <p>${data.special_project.subtitle}</p>
-        <a class="repo-link" href="${data.special_project.repo}" target="_blank" rel="noreferrer">View Repo</a>
-        <ul class="project-list">
-          ${data.special_project.details.map((detail) => `<li>${detail}</li>`).join("")}
-        </ul>
-      </article>
+  // ═══════════════════════════════════════════════════════════
+  // INVENTORY CATEGORY & ITEMS LOGIC
+  // ═══════════════════════════════════════════════════════════
+  const categoryTabs = document.querySelectorAll(".cat-tab");
+  const itemGrid = document.getElementById("pubg-item-grid");
+  const catTitleEl = document.getElementById("cat-banner-title");
+  const catCountEl = document.getElementById("cat-banner-count");
+
+  // Detail drawer elements
+  const detailRarityBadge = document.getElementById("detail-rarity-badge");
+  const detailCatTag = document.getElementById("detail-category-tag");
+  const detailTitle = document.getElementById("detail-title");
+  const detailTagline = document.getElementById("detail-tagline");
+  const detailDesc = document.getElementById("detail-desc");
+  const detailPoints = document.getElementById("detail-points");
+  const detailTechChips = document.getElementById("detail-tech-chips");
+  const detailActions = document.getElementById("detail-actions");
+
+  // PUBG MOBILE-Inspired Project Inspection Glass Panel
+  const projectGlassPanel = document.getElementById("project-glass-panel");
+  const glassCloseBtn = document.getElementById("glass-close-btn");
+  const glassTitle = document.getElementById("glass-project-title");
+  const glassTagline = document.getElementById("glass-project-tagline");
+  const glassCategory = document.getElementById("glass-category-tag");
+  const glassRarity = document.getElementById("glass-rarity-pill");
+  const glassDesc = document.getElementById("glass-description");
+  const glassFeatures = document.getElementById("glass-features-list");
+  const glassTechGrid = document.getElementById("glass-tech-grid");
+  const glassRepoBtn = document.getElementById("glass-repo-btn");
+  const glassDemoBtn = document.getElementById("glass-demo-btn");
+  let activeProjectId = null;
+
+  function openProjectGlassPanel(item) {
+    if (!projectGlassPanel) return;
+
+    activeProjectId = item.id;
+    const isAlreadyOpen = projectGlassPanel.classList.contains("active");
+
+    const populateGlass = () => {
+      if (glassTitle) glassTitle.textContent = item.name;
+      if (glassTagline) glassTagline.textContent = item.tagline || item.sub || "";
+      if (glassCategory) glassCategory.textContent = item.category || item.tag || "WEAPONS // PROJECT";
+      if (glassRarity) {
+        glassRarity.textContent = (item.rarity || "COMMON").toUpperCase();
+        glassRarity.className = `glass-rarity-pill ${item.rarity || 'common'}`;
+      }
+      if (glassDesc) glassDesc.textContent = item.desc || "";
+
+      if (glassFeatures) {
+        glassFeatures.innerHTML = (item.details || []).map(f => `<li>${f}</li>`).join("");
+      }
+
+      if (glassTechGrid) {
+        glassTechGrid.innerHTML = (item.tech || []).map(t => `<span class="glass-tech-chip">${t}</span>`).join("");
+      }
+
+      if (glassRepoBtn) {
+        glassRepoBtn.href = item.repo || "#";
+        glassRepoBtn.title = `View ${item.name} GitHub Repository`;
+      }
+
+      if (glassDemoBtn) {
+        if (item.demo) {
+          glassDemoBtn.href = item.demo;
+          glassDemoBtn.style.display = "inline-flex";
+          glassDemoBtn.title = `Open ${item.name} Live Demo`;
+        } else {
+          glassDemoBtn.style.display = "none";
+        }
+      }
+    };
+
+    if (isAlreadyOpen) {
+      projectGlassPanel.style.transition = "opacity 120ms ease, transform 120ms ease";
+      projectGlassPanel.style.opacity = "0.7";
+      projectGlassPanel.style.transform = "translateX(5px)";
+      setTimeout(() => {
+        populateGlass();
+        projectGlassPanel.style.opacity = "1";
+        projectGlassPanel.style.transform = "translateX(0)";
+      }, 100);
+    } else {
+      populateGlass();
+      projectGlassPanel.classList.add("active");
+      projectGlassPanel.setAttribute("aria-hidden", "false");
+    }
+  }
+
+  function closeProjectGlassPanel() {
+    if (!projectGlassPanel) return;
+    projectGlassPanel.classList.remove("active");
+    projectGlassPanel.setAttribute("aria-hidden", "true");
+    activeProjectId = null;
+    if (currentCategory === "weapons") {
+      document.querySelectorAll(".pubg-item-card.selected").forEach(c => c.classList.remove("selected"));
+    }
+  }
+
+  glassCloseBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    AudioController.playClick();
+    closeProjectGlassPanel();
+  });
+
+  glassRepoBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+
+  glassDemoBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+
+  let currentCategory = "weapons";
+  let activeItemsList = [];
+
+  // Generate Inventory Items from portfolio data
+  function buildCategoryItems(catKey) {
+    if (!data) return [];
+
+    switch (catKey) {
+      case "weapons": // Projects
+        return [
+          {
+            id: "healix",
+            name: "HEALIX",
+            sub: "RAG Orchestrator",
+            rarity: "mythic",
+            icon: "🔥",
+            tag: "LEVEL 3 RAG",
+            category: "AI/ML · RAG SYSTEMS",
+            tagline: "Self-healing RAG pipeline with automated query re-write.",
+            desc: "A production-grade Retrieval-Augmented Generation system that detects query failures, automatically re-writes searches, and validates answers to eliminate hallucinations.",
+            details: [
+              "Self-healing fallback mechanism that retries retrieval with rewritten embeddings.",
+              "Strict answer hallucination checker with cross-encoder validation.",
+              "End-to-end Python microservice with sub-250ms latency."
+            ],
+            tech: ["Python", "LangChain", "FastAPI", "ChromaDB", "Groq", "LLMs"],
+            repo: "https://github.com/Akshay-kumar-patil/healix",
+            actions: [
+              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/healix", primary: true },
+              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/healix" }
+            ]
+          },
+          {
+            id: "articulate",
+            name: "ARTICULATE.AI",
+            sub: "Mock Interview Bot",
+            rarity: "mythic",
+            icon: "🎙️",
+            tag: "VOICE AI",
+            category: "AI/ML · VOICE INTERVIEW",
+            tagline: "Verbal mock interview prep engine powered by LLMs.",
+            desc: "An AI-powered mock interview platform that conducts verbal voice interviews tailored directly to your uploaded resume and target job role.",
+            details: [
+              "Real-time voice-to-voice interaction via Whisper & gTTS.",
+              "Dynamic question generation based on candidate resume strengths and weaknesses.",
+              "Automated scoring rubric measuring technical depth, clarity, and pacing."
+            ],
+            tech: ["Python", "FastAPI", "Whisper", "gTTS", "Gemini API", "WebSockets"],
+            repo: "https://github.com/Akshay-kumar-patil/Articulate.AI",
+            actions: [
+              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/Articulate.AI", primary: true },
+              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/Articulate.AI" }
+            ]
+          },
+          {
+            id: "careerpilot",
+            name: "CAREERPILOT",
+            sub: "Career OS",
+            rarity: "legendary",
+            icon: "🎯",
+            tag: "AI TOOL",
+            category: "AI/ML · CAREER TECH",
+            tagline: "Comprehensive career planning & ATS optimization system.",
+            desc: "Helps job seekers build stronger application materials, evaluate job fit with automated semantic scoring, and track applications.",
+            details: [
+              "Automated resume vs. job description semantic alignment engine.",
+              "Referral tracking and interview timeline tracker.",
+              "Outcome analytics and actionable improvement suggestions."
+            ],
+            tech: ["Python", "Streamlit", "Scikit-Learn", "FastAPI", "Pandas"],
+            repo: "https://github.com/Akshay-kumar-patil/CareerPilot",
+            actions: [
+              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/CareerPilot", primary: true },
+              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/CareerPilot" }
+            ]
+          },
+          {
+            id: "spendly",
+            name: "SPENDLY.AI",
+            sub: "Voice Expense Tracker",
+            rarity: "epic",
+            icon: "💳",
+            tag: "MULTIMODAL",
+            category: "AI/ML · FINTECH OCR",
+            tagline: "Voice & receipt multimodal expense intelligence.",
+            desc: "Extracts and categorizes financial expenditures seamlessly from voice dictation and camera snapshots of physical paper receipts.",
+            details: [
+              "Multimodal receipt OCR and semantic extraction via Gemini Vision.",
+              "Voice input parser for conversational quick logging.",
+              "Interactive monthly burn-rate analytics."
+            ],
+            tech: ["Python", "Gemini API", "Streamlit", "OCR", "Pillow"],
+            repo: "https://github.com/Akshay-kumar-patil/SpendlyAI",
+            actions: [
+              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/SpendlyAI", primary: true },
+              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/SpendlyAI" }
+            ]
+          },
+          {
+            id: "doodling",
+            name: "DOODLING",
+            sub: "Multiplayer Web Game",
+            rarity: "epic",
+            icon: "🎨",
+            tag: "REAL-TIME",
+            category: "WEB DEV · MULTIPLAYER GAME",
+            tagline: "Fast-paced multiplayer drawing & guessing game.",
+            desc: "Real-time canvas drawing and live guessing room built on FastAPI WebSockets and in-browser WebRTC signaling.",
+            details: [
+              "Low-latency canvas stroke broadcasting over WebSockets.",
+              "Automated word bank and fuzzy chat answer matching.",
+              "Built-in voice room channels using WebRTC."
+            ],
+            tech: ["FastAPI", "WebSockets", "WebRTC", "Vanilla JS", "Canvas API"],
+            repo: "https://github.com/Akshay-kumar-patil/Doodling",
+            actions: [
+              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/Doodling", primary: true },
+              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/Doodling" }
+            ]
+          },
+          {
+            id: "weather",
+            name: "WEATHER MODEL",
+            sub: "Rain Prediction ML",
+            rarity: "epic",
+            icon: "⛅",
+            tag: "99.8% ACC",
+            category: "MACHINE LEARNING · PREDICTION",
+            tagline: "High-accuracy rainfall classification model.",
+            desc: "Predicts the probability of localized rainfall using historic meteorological telemetry and an optimized Random Forest ensemble.",
+            details: [
+              "99.8% test accuracy via scikit-learn RandomForestClassifier.",
+              "Comprehensive feature engineering and hyperparameter tuning.",
+              "Clean interactive Streamlit demonstration dashboard."
+            ],
+            tech: ["Python", "Scikit-Learn", "Streamlit", "Pandas", "Matplotlib"],
+            repo: "https://github.com/Akshay-kumar-patil/weather_forecasting_ml_model",
+            actions: [
+              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/weather_forecasting_ml_model", primary: true },
+              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/weather_forecasting_ml_model" }
+            ]
+          },
+          {
+            id: "rps",
+            name: "ROCK PAPER C++",
+            sub: "Origin Project",
+            rarity: "rare",
+            icon: "⚡",
+            tag: "C++ CORE",
+            category: "CORE DEV · C++ FOUNDATION",
+            tagline: "First foundational software project written in C++.",
+            desc: "Special mention project representing the very beginning of Akshay's programming journey, written in raw C++.",
+            details: [
+              "Custom game state machine with algorithmic computer opponent.",
+              "Memory-safe design and foundational programming patterns.",
+              "Kept as a milestone marking the starting point of the developer's journey."
+            ],
+            tech: ["C++", "STL", "OOP", "Data Structures"],
+            repo: "https://github.com/Akshay-kumar-patil/R-P-S",
+            actions: [
+              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/R-P-S", primary: true },
+              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/R-P-S" }
+            ]
+          }
+        ];
+
+      case "headgear": // Education
+        return (data.education || []).map((ed, idx) => ({
+          id: `edu-${idx}`,
+          name: ed.degree.split(" ")[0].toUpperCase() + " // " + (idx === 0 ? "B.TECH" : idx === 1 ? "12TH PCM" : "10TH"),
+          sub: ed.institution,
+          rarity: idx === 0 ? "legendary" : "epic",
+          icon: idx === 0 ? "🎓" : "🏫",
+          tag: ed.duration,
+          tagline: ed.degree,
+          desc: `${ed.institution} (${ed.duration}). Academic Performance: ${ed.metric}.`,
+          details: [
+            `Institution: ${ed.institution}`,
+            `Timeline: ${ed.duration}`,
+            `Verified Metric: ${ed.metric}`
+          ],
+          tech: ["Artificial Intelligence", "Machine Learning", "Data Structures", "Algorithms", "Mathematics"],
+          actions: [
+            { label: "📜 SERVICE RECORD", callback: () => openModal(careerModal), primary: true }
+          ]
+        }));
+
+      case "gear": // Technical Skills
+        const skillsObj = data.skills || {};
+        return Object.entries(skillsObj).map(([grp, items], idx) => {
+          const rarity = idx < 2 ? "mythic" : idx < 4 ? "legendary" : "epic";
+          const icon = grp.includes("Lang") ? "💻" : grp.includes("Framework") ? "⚡" : grp.includes("Data") ? "🗄️" : "🛠️";
+          return {
+            id: `skill-${idx}`,
+            name: grp.toUpperCase(),
+            sub: `${items.length} Tech Assets`,
+            rarity: rarity,
+            icon: icon,
+            tag: `TIER ${idx + 1}`,
+            tagline: `${grp} Mastery & Applied Experience`,
+            desc: `Production expertise in ${items.slice(0, 4).join(", ")} and related tooling.`,
+            details: items.map(item => `Equipped: ${item}`),
+            tech: items,
+            actions: [
+              { label: "⚡ INSPECT SKILLS", callback: () => switchCategory("weapons"), primary: true }
+            ]
+          };
+        });
+
+      case "collections": // Achievements
+        return (data.achievements || []).map((ach, idx) => ({
+          id: `ach-${idx}`,
+          name: ach.split(" ")[0].toUpperCase() + " // AWARD",
+          sub: ach.split("-")[0].trim(),
+          rarity: idx < 2 ? "legendary" : "epic",
+          icon: "🏆",
+          tag: "WINNER",
+          tagline: "Verified Distinction & Achievement",
+          desc: ach,
+          details: [
+            `Award Record: ${ach}`,
+            "Validated competitive coding & engineering milestone."
+          ],
+          tech: ["Competitive Programming", "DSA", "Problem Solving", "Cisco Certified"],
+          actions: [
+            { label: "🏆 VIEW HONORS", callback: () => openModal(careerModal), primary: true }
+          ]
+        }));
+
+      case "outfit": // About Me
+        return [
+          {
+            id: "dossier",
+            name: "OPERATOR DOSSIER",
+            sub: "Akshay Kumar Patil",
+            rarity: "legendary",
+            icon: "🎖️",
+            tag: "LEVEL 75",
+            tagline: "AI/ML Developer & RAG Architecture Specialist",
+            desc: data.hero?.bio || data.hero?.headline,
+            details: data.summary_points || [
+              "Hands-on experience in Machine Learning, Deep Learning, and LLM-based systems.",
+              "Comfortable building robust RAG workflows and multimodal automation.",
+              "Focused on practical AI applications with real-world impact."
+            ],
+            tech: ["Jabalpur, MP", "B.Tech AI & ML 2023-27", "Open to Opportunities"],
+            actions: [
+              { label: "📦 OPEN RESUME", callback: () => openModal(resumeModal), primary: true },
+              { label: "📡 DISPATCH COMMS", callback: () => openModal(commsModal) }
+            ]
+          },
+          {
+            id: "radar",
+            name: "8D RADAR MATRIX",
+            sub: "Competency Mapping",
+            rarity: "mythic",
+            icon: "📊",
+            tag: "CORE METRICS",
+            tagline: "Multi-dimensional Technical Competency Distribution",
+            desc: "Comprehensive domain mastery across Machine Learning, RAG, Backend Python, C++ DSA, and Distributed Data Stores.",
+            details: (data.competency || []).map(c => `${c.label}: ${c.value}% proficiency`),
+            tech: ["Python 80%", "AI/ML 84%", "Backend 82%", "DSA in C++ 75%"],
+            actions: [
+              { label: "🧠 LAUNCH LAB", callback: () => openModal(labModal), primary: true }
+            ]
+          }
+        ];
+
+      case "supply": // Supply Crate & Resume
+        return [
+          {
+            id: "resume-pdf",
+            name: "RESUME PDF CRATE",
+            sub: "Official Dossier",
+            rarity: "legendary",
+            icon: "📦",
+            tag: "SUPPLY DROP",
+            tagline: "Akshay Kumar Patil — Official Resume & Credentials",
+            desc: "Detailed technical background, academic records, publications, and production project portfolio formatted for recruitment review.",
+            details: [
+              "Direct embedded in-browser PDF preview.",
+              "One-click high-resolution download option.",
+              "Fully up to date with 2026 AI/ML achievements."
+            ],
+            tech: ["PDF Asset", "173 KB", "Updated 2026"],
+            actions: [
+              { label: "👁️ VIEW RESUME", callback: () => openModal(resumeModal), primary: true },
+              { label: "💾 DOWNLOAD PDF", url: "/static/resume/Akshay_updated_resume_main.pdf" }
+            ]
+          },
+          {
+            id: "github-hub",
+            name: "GITHUB REPO CRATE",
+            sub: "Code Repositories",
+            rarity: "epic",
+            icon: "🐙",
+            tag: "10+ REPOS",
+            tagline: "Open Source Codebases & Implementations",
+            desc: "Explore public source code, commit history, neural network implementations, and live web apps on GitHub.",
+            details: [
+              "Active codebases across PyTorch, FastAPI, and Streamlit.",
+              "Includes documentation, testing benchmarks, and architecture diagrams."
+            ],
+            tech: ["GitHub", "Git", "CI/CD", "Open Source"],
+            actions: [
+              { label: "🚀 OPEN GITHUB", url: data.contact?.github || "https://github.com/Akshay-kumar-patil", primary: true }
+            ]
+          },
+          {
+            id: "linkedin-net",
+            name: "LINKEDIN DISPATCH",
+            sub: "Professional Network",
+            rarity: "epic",
+            icon: "💼",
+            tag: "NETWORK",
+            tagline: "Professional Connection & Messaging",
+            desc: "Connect directly with Akshay on LinkedIn for AI/ML engineering roles, internships, and collaborative research opportunities.",
+            details: [
+              "Verified student profile at GGITS.",
+              "Direct LinkedIn InMail messaging enabled."
+            ],
+            tech: ["LinkedIn", "Professional Network"],
+            actions: [
+              { label: "💼 CONNECT ON LINKEDIN", url: data.contact?.linkedin || "https://linkedin.com/in/akshay-patil-akki12", primary: true }
+            ]
+          }
+        ];
+
+      default:
+        return [];
+    }
+  }
+
+  // Switch Category Tab
+  function switchCategory(catKey) {
+    if (catKey === "lab") {
+      openModal(labModal);
+      return;
+    }
+
+    AudioController.playTab();
+    currentCategory = catKey;
+
+    if (catKey !== "weapons") {
+      closeProjectGlassPanel();
+    }
+
+    categoryTabs.forEach(tab => {
+      const isMatch = tab.getAttribute("data-cat") === catKey;
+      tab.classList.toggle("active", isMatch);
+      tab.setAttribute("aria-selected", isMatch ? "true" : "false");
+    });
+
+    const bannerTitles = {
+      weapons: "WEAPONS // FEATURED PROJECTS",
+      headgear: "HEADGEAR // EDUCATION RECORDS",
+      gear: "GEAR // TECHNICAL SKILLS",
+      collections: "COLLECTIONS // HONORS & CERTIFICATIONS",
+      outfit: "OUTFIT // OPERATOR PROFILE",
+      supply: "SUPPLY CRATE // RESUME & RESOURCES"
+    };
+
+    if (catTitleEl) catTitleEl.textContent = bannerTitles[catKey] || catKey.toUpperCase();
+
+    activeItemsList = buildCategoryItems(catKey);
+    if (catCountEl) catCountEl.textContent = `${activeItemsList.length} ITEMS EQUIPPED`;
+
+    renderItemGrid(activeItemsList);
+  }
+
+  categoryTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      const cat = tab.getAttribute("data-cat");
+      switchCategory(cat);
+    });
+  });
+
+  // Populate Detail Drawer
+  function populateDetailDrawer(item) {
+    if (detailRarityBadge) {
+      detailRarityBadge.textContent = item.rarity?.toUpperCase() || "COMMON";
+      detailRarityBadge.className = `detail-rarity-badge ${item.rarity}`;
+    }
+    if (detailCatTag) detailCatTag.textContent = item.tag || currentCategory.toUpperCase();
+    if (detailTitle) detailTitle.textContent = item.name;
+    if (detailTagline) detailTagline.textContent = item.tagline || item.sub;
+    if (detailDesc) detailDesc.textContent = item.desc || "";
+
+    if (detailPoints) {
+      detailPoints.innerHTML = (item.details || []).map(pt => `<li>${pt}</li>`).join("");
+    }
+
+    if (detailTechChips) {
+      detailTechChips.innerHTML = (item.tech || []).map(t => `<span class="tech-chip">${t}</span>`).join("");
+    }
+
+    if (detailActions) {
+      detailActions.innerHTML = "";
+      (item.actions || []).forEach(act => {
+        if (act.url) {
+          const a = document.createElement("a");
+          a.href = act.url;
+          a.target = "_blank";
+          a.rel = "noreferrer";
+          a.className = `pubg-action-btn ${act.primary ? '' : 'pubg-action-btn--secondary'}`;
+          a.textContent = act.label;
+          detailActions.appendChild(a);
+        } else if (act.callback) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = `pubg-action-btn ${act.primary ? '' : 'pubg-action-btn--secondary'}`;
+          btn.textContent = act.label;
+          btn.addEventListener("click", act.callback);
+          detailActions.appendChild(btn);
+        }
+      });
+    }
+  }
+
+  // Select Item and Populate Drawer
+  function selectItem(item, cardEl) {
+    document.querySelectorAll(".pubg-item-card").forEach(c => c.classList.remove("selected"));
+    cardEl?.classList.add("selected");
+    populateDetailDrawer(item);
+  }
+
+  // Render Grid Items
+  function renderItemGrid(items) {
+    if (!itemGrid) return;
+    itemGrid.innerHTML = "";
+
+    if (items.length === 0) {
+      itemGrid.innerHTML = `<p style="grid-column:1/-1; color:var(--pubg-text-dim); padding:20px;">No items equipped in this slot.</p>`;
+      return;
+    }
+
+    items.forEach((item, idx) => {
+      const card = document.createElement("article");
+      const isSelected = (currentCategory === "weapons")
+        ? (activeProjectId === item.id)
+        : (idx === 0);
+      card.className = `pubg-item-card ${item.rarity || 'common'} ${isSelected ? 'selected' : ''}`;
+      card.setAttribute("role", "option");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("data-id", item.id);
+      card.setAttribute("aria-label", `${item.name} - ${item.sub}`);
+
+      card.innerHTML = `
+        <div class="item-card-top">
+          <span class="item-rarity-pill">${item.rarity}</span>
+          <span class="item-badge-lvl">${item.tag || 'LVL 1'}</span>
+        </div>
+        <div class="item-icon-center">${item.icon || '📦'}</div>
+        <div class="item-card-footer">
+          <span class="item-card-name">${item.name}</span>
+          <span class="item-card-sub">${item.sub}</span>
+        </div>
+      `;
+
+      const handleItemActivate = () => {
+        AudioController.playEquip();
+        if (currentCategory === "weapons") {
+          // If this project is already active and the glass panel is open, toggle it closed
+          if (activeProjectId === item.id && projectGlassPanel?.classList.contains("active")) {
+            closeProjectGlassPanel();
+          } else {
+            selectItem(item, card);
+            openProjectGlassPanel(item);
+          }
+        } else {
+          selectItem(item, card);
+        }
+      };
+
+      card.addEventListener("click", handleItemActivate);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleItemActivate();
+        }
+      });
+
+      itemGrid.appendChild(card);
+    });
+
+    // Default item handling
+    if (items.length > 0) {
+      if (currentCategory !== "weapons") {
+        selectItem(items[0], itemGrid.firstElementChild);
+      } else {
+        const targetItem = activeProjectId
+          ? (items.find(i => i.id === activeProjectId) || items[0])
+          : items[0];
+        const targetCard = itemGrid.querySelector(`[data-id="${targetItem.id}"]`);
+        populateDetailDrawer(targetItem);
+        if (activeProjectId && projectGlassPanel?.classList.contains("active")) {
+          targetCard?.classList.add("selected");
+          openProjectGlassPanel(targetItem);
+        }
+      }
+    }
+  }
+
+  // Initial category render
+  switchCategory("weapons");
+
+  // Render Career Modal Timeline
+  function renderCareerModal(pData) {
+    const container = document.getElementById("career-timeline-content");
+    if (!container || !pData) return;
+    container.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <h4 style="font-family:var(--font-display); font-size:1.2rem; color:var(--pubg-amber);">ACADEMIC DEGREE &amp; INSTITUTIONS</h4>
+        ${(pData.education || []).map(ed => `
+          <div class="career-card-item">
+            <img class="career-img-thumb" src="${ed.image || '/static/img/education-btech.jpg'}" alt="${ed.institution}" />
+            <div class="career-item-info">
+              <span class="career-item-title">${ed.degree}</span>
+              <span class="career-item-inst">${ed.institution}</span>
+              <div class="career-item-meta">
+                <span>⏱️ ${ed.duration}</span>
+                <span>📊 ${ed.metric}</span>
+              </div>
+            </div>
+          </div>
+        `).join("")}
+        <h4 style="font-family:var(--font-display); font-size:1.2rem; color:var(--pubg-amber); margin-top:14px;">KEY ACHIEVEMENTS</h4>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          ${(pData.achievements || []).map(ach => `
+            <div style="background:rgba(25,30,36,0.8); border:1px solid var(--pubg-border-dim); padding:8px 12px; font-family:var(--font-mono); font-size:0.75rem; color:var(--pubg-text-cream);">
+              🏆 ${ach}
+            </div>
+          `).join("")}
+        </div>
+      </div>
     `;
   }
 
-  const educationGrid = document.getElementById("education-grid");
-  if (educationGrid) {
-    educationGrid.innerHTML = data.education.map((item) => `
-      <article class="card education-card">
-        <div class="education-card-bg" style="background-image: url('${item.image || ''}')" aria-hidden="true"></div>
-        <div class="education-card-content">
-          <h4>${item.degree}</h4>
-          <p class="education-institution">${item.institution}</p>
-          <div class="timeline">
-            <div class="timeline-item"><strong>Duration</strong>${item.duration}</div>
-            <div class="timeline-item"><strong>Metric</strong>${item.metric}</div>
-          </div>
-        </div>
-      </article>
-    `).join("");
-  }
+  // ═══════════════════════════════════════════════════════════
+  // PUBG CINEMATIC LOADING CONTROLLER
+  // ═══════════════════════════════════════════════════════════
+  (function initLoadingScreen() {
+    const overlay  = document.getElementById("pubg-loading-overlay");
+    const pctEl    = document.getElementById("pubg-loading-pct");
+    const fillEl   = document.getElementById("pubg-loading-fill");
+    const buggyEl  = document.getElementById("pubg-buggy");
+    const enterBtn = document.getElementById("enter-button");
+    const toast    = document.getElementById("winner-toast");
 
-  const skillsGrid = document.getElementById("skills-grid");
-  if (skillsGrid) {
-    skillsGrid.innerHTML = Object.entries(data.skills).map(([group, values]) => {
-      // Repeat tags 4× for seamless centered loop (animation shifts -25% per cycle)
-      const tagsHTML = values.map((v) => `<span class="skill-tag">${v}</span>`).join("");
-      const doubled = tagsHTML + tagsHTML + tagsHTML + tagsHTML; // four copies = always fills viewport
-      return `
-        <div class="skill-group">
-          <h4>${group}</h4>
-          <div class="skill-ticker-wrap">
-            <div class="skill-ticker-track">${doubled}</div>
-          </div>
-        </div>`;
-    }).join("");
-  }
+    let start = null;
+    const DURATION = 3200;
+    const targets = [0, 24, 62, 80, 94, 100];
 
-  const domainBoard = document.getElementById("domain-mastery");
-  if (domainBoard) {
-    domainBoard.innerHTML = data.domain_mastery.map((group) => `
-      <section class="domain-group">
-        <div class="domain-title">
-          <span class="domain-icon" aria-hidden="true">${group.icon}</span>
-          <h4>${group.name}</h4>
-        </div>
-        <div class="domain-tags">
-          ${group.items.map((item) => `<span class="domain-tag">${item}</span>`).join("")}
-        </div>
-      </section>
-    `).join("");
-  }
+    function animatePct(ts) {
+      if (!start) start = ts;
+      const elapsed = ts - start;
+      const prog = Math.min(elapsed / DURATION, 1);
+      const segments = targets.length - 1;
+      const seg = Math.min(Math.floor(prog * segments), segments - 1);
+      const segProg = (prog * segments) - seg;
+      const val = Math.round(targets[seg] + (targets[seg + 1] - targets[seg]) * segProg);
 
-  const achievementsRow = document.getElementById("achievements-row");
-  if (achievementsRow) {
-    achievementsRow.innerHTML = data.achievements.map((item) => `<span class="badge">${item}</span>`).join("");
-  }
-
-  const windTrail = document.getElementById("wind-trail");
-  const cursorGlow = document.getElementById("cursor-glow");
-  const stormLayer = document.getElementById("storm-layer");
-  const resetStormButton = document.getElementById("reset-storm");
-  const portfolioShell = document.querySelector(".portfolio-shell");
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
-  let stormActive = false;
-
-  const randomBetween = (min, max) => min + Math.random() * (max - min);
-  const stormPieces = portfolioShell ? [...portfolioShell.querySelectorAll(".glass, .footer")] : [];
-  stormPieces.forEach((piece) => piece.classList.add("storm-piece"));
-
-  const resetStorm = () => {
-    if (!stormActive) return;
-    stormActive = false;
-    document.body.classList.remove("storm-active");
-    document.body.classList.add("storm-resetting", "screen-blink");
-    stormLayer?.classList.remove("ready");
-    stormLayer?.setAttribute("aria-hidden", "true");
-
-    window.setTimeout(() => {
-      document.body.classList.remove("storm-resetting");
-      stormLayer?.classList.remove("active");
-      document.body.classList.remove("screen-blink");
-      stormPieces.forEach((piece) => {
-        piece.style.removeProperty("--storm-x");
-        piece.style.removeProperty("--storm-y");
-        piece.style.removeProperty("--storm-rotation");
-        piece.style.removeProperty("--storm-scale");
-        piece.style.removeProperty("--storm-delay");
-        piece.style.removeProperty("--storm-duration");
-      });
-    }, 720);
-  };
-
-  const startStorm = () => {
-    if (stormActive || !stormLayer || document.body.classList.contains("resume-open")) return;
-    stormActive = true;
-    stormPieces.forEach((piece, index) => {
-      const direction = index % 2 === 0 ? 1 : -1;
-      piece.style.setProperty("--storm-x", `${randomBetween(-180, 180)}px`);
-      piece.style.setProperty("--storm-y", `${randomBetween(-140, 140)}px`);
-      piece.style.setProperty("--storm-rotation", `${direction * randomBetween(8, 24)}deg`);
-      piece.style.setProperty("--storm-scale", `${randomBetween(0.94, 1.04)}`);
-      piece.style.setProperty("--storm-delay", `${index * 35}ms`);
-      piece.style.setProperty("--storm-duration", `${randomBetween(1500, 2200)}ms`);
-    });
-    document.body.classList.add("storm-active");
-    stormLayer.classList.add("active");
-    stormLayer.setAttribute("aria-hidden", "false");
-    window.setTimeout(() => {
-      if (stormActive) stormLayer.classList.add("ready");
-    }, 1450);
-  };
-
-  resetStormButton?.addEventListener("click", resetStorm);
-
-  if (windTrail && !reducedMotion && !coarsePointer) {
-    const rand = (min, max) => min + Math.random() * (max - min);
-    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-    const trailNodes = [];
-    let lastX = null;
-    let lastY = null;
-    let lastSpawn = 0;
-    let fastStartedAt = null;
-    let lastMoveAt = null;
-    let fastDistance = 0;
-    let glowHideTimer = null;
-
-    const showCursorGlow = (x, y) => {
-      if (!cursorGlow) return;
-      cursorGlow.style.left = `${x}px`;
-      cursorGlow.style.top = `${y}px`;
-      cursorGlow.classList.add("active");
-      if (glowHideTimer) {
-        window.clearTimeout(glowHideTimer);
-      }
-      glowHideTimer = window.setTimeout(() => {
-        cursorGlow.classList.remove("active");
-      }, 180);
-    };
-
-    const prune = () => {
-      while (trailNodes.length > 36) {
-        const node = trailNodes.shift();
-        node?.remove();
-      }
-    };
-
-    const spawn = (className, x, y, styles) => {
-      const node = document.createElement("span");
-      node.className = className;
-      node.style.setProperty("--x", `${x}px`);
-      node.style.setProperty("--y", `${y}px`);
-      Object.entries(styles).forEach(([key, value]) => {
-        node.style.setProperty(key, value);
-      });
-      windTrail.appendChild(node);
-      trailNodes.push(node);
-      node.addEventListener("animationend", () => node.remove(), { once: true });
-      prune();
-    };
-
-    const handleMove = (event) => {
-      const x = event.clientX;
-      const y = event.clientY;
-      showCursorGlow(x, y);
-      if (lastX === null || lastY === null) {
-        lastX = x;
-        lastY = y;
-        return;
+      if (pctEl) pctEl.textContent = val + "%";
+      if (fillEl) fillEl.style.width = val + "%";
+      if (buggyEl) {
+        buggyEl.style.left = "calc(" + val + "% - " + (val * 0.68) + "px)";
+        if (val >= 100) buggyEl.classList.add("parked");
       }
 
-      const dx = x - lastX;
-      const dy = y - lastY;
-      const distance = Math.max(Math.hypot(dx, dy), 0.5);
-      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-      const now = performance.now();
-      const spacing = now - lastSpawn;
-      const elapsed = Math.max(now - (lastMoveAt ?? now), 1);
-      const speed = distance / elapsed * 1000;
-      const isFast = speed > 350 || distance > 8;
-      if (isFast && elapsed < 240) {
-        fastStartedAt ??= now;
-        fastDistance += distance;
-        if (now - fastStartedAt >= 5000 && fastDistance >= 650) startStorm();
+      if (prog < 1) {
+        requestAnimationFrame(animatePct);
       } else {
-        fastStartedAt = null;
-        fastDistance = 0;
-      }
-      lastMoveAt = now;
-      const flowX = dx / distance;
-      const flowY = dy / distance;
-      const normalX = -flowY;
-      const normalY = flowX;
-      const streakCount = distance > 34 || spacing > 55 ? 2 : 1;
-      const leafCount = distance > 28 ? 1 : 0;
-      const travel = clamp(distance * 0.58 + 16, 18, 82);
-      const duration = clamp(820 + distance * 9, 850, 1450);
-      const leafTravel = clamp(distance * 0.3 + 10, 10, 34);
-      const leafDur = clamp(1000 + distance * 7, 980, 1550);
-
-      for (let i = 0; i < streakCount; i += 1) {
-        const behind = rand(4, 12);
-        spawn("wind-streak", x - flowX * behind + normalX * rand(-4, 4), y - flowY * behind + normalY * rand(-4, 4), {
-          "--len": `${travel + rand(-8, 10)}px`,
-          "--angle": `${angle + rand(-5, 5)}deg`,
-          "--travel": `${travel}px`,
-          "--sway": `${rand(-8, 8)}px`,
-          "--dur": `${duration + rand(-150, 150)}ms`,
-        });
-      }
-
-      for (let i = 0; i < leafCount; i += 1) {
-        spawn("wind-leaf", x - flowX * rand(2, 8) + rand(-6, 6), y - flowY * rand(2, 8) + rand(-6, 6), {
-          "--leaf-size": `${rand(3.5, 6.5)}px`,
-          "--leaf-rot": `${angle + rand(-30, 30)}deg`,
-          "--leaf-dx": `${flowX * leafTravel + normalX * rand(-13, 13)}px`,
-          "--leaf-dy": `${flowY * leafTravel + normalY * rand(-13, 13)}px`,
-          "--dur": `${leafDur + rand(-160, 140)}ms`,
-        });
-      }
-
-      lastX = x;
-      lastY = y;
-      lastSpawn = now;
-    };
-
-    window.addEventListener("pointermove", handleMove, { passive: true });
-    window.addEventListener("pointerdown", handleMove, { passive: true });
-    window.addEventListener("pointerleave", () => {
-      lastX = null;
-      lastY = null;
-      fastStartedAt = null;
-      lastMoveAt = null;
-      fastDistance = 0;
-      cursorGlow?.classList.remove("active");
-    });
-    window.addEventListener("blur", () => {
-      lastX = null;
-      lastY = null;
-      fastStartedAt = null;
-      lastMoveAt = null;
-      fastDistance = 0;
-      cursorGlow?.classList.remove("active");
-    });
-  }
-
-  const openingScreen = document.getElementById("opening-screen");
-  const enterButton = document.getElementById("enter-button");
-  const dismissOpening = () => {
-    if (!openingScreen || openingScreen.classList.contains("hide")) return;
-    openingScreen.setAttribute("aria-hidden", "true");
-    openingScreen.classList.add("hide");
-    window.setTimeout(() => {
-      openingScreen.style.display = "none";
-    }, 950);
-  };
-  window.setTimeout(dismissOpening, 4200);
-  enterButton?.addEventListener("click", dismissOpening);
-  enterButton?.addEventListener("pointerdown", dismissOpening);
-  openingScreen?.addEventListener("click", (event) => {
-    if (event.target === openingScreen) dismissOpening();
-  });
-  window.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === "Escape") dismissOpening();
-    if (event.key === "Escape") {
-      if (document.body.classList.contains("resume-open")) {
-        closeResume();
-      }
-      if (stormActive) {
-        resetStorm();
-      }
-    }
-  });
-
-  const revealTargets = document.querySelectorAll(".reveal");
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("in-view");
-      }
-    });
-  }, { threshold: 0.18 });
-  revealTargets.forEach((node) => observer.observe(node));
-
-  const skillsBg = document.getElementById("skills-bg");
-  const skillsAnchor = document.getElementById("skills-anchor");
-  if (skillsBg && skillsAnchor) {
-    const bgObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        skillsBg.classList.toggle("visible", entry.isIntersecting);
-      });
-    }, { rootMargin: "0px 0px -10% 0px", threshold: 0.05 });
-    bgObserver.observe(skillsAnchor);
-  }
-
-  const modal = document.getElementById("resume-modal");
-  const openResume = () => {
-    modal?.classList.add("open");
-    modal?.setAttribute("aria-hidden", "false");
-    document.body.classList.add("resume-open");
-  };
-  const closeResume = () => {
-    modal?.classList.remove("open");
-    modal?.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("resume-open");
-  };
-
-  const openResumeButtons = ["open-resume", "footer-open-resume"];
-  openResumeButtons.forEach((id) => {
-    document.getElementById(id)?.addEventListener("click", openResume);
-  });
-  document.getElementById("close-resume")?.addEventListener("click", closeResume);
-  document.getElementById("resume-backdrop")?.addEventListener("click", closeResume);
-
-  document.getElementById("view-projects")?.addEventListener("click", () => {
-    document.getElementById("projects-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-
-  document.getElementById("view-skills")?.addEventListener("click", () => {
-    document.getElementById("skills-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-
-  document.getElementById("contact-me")?.addEventListener("click", () => {
-    document.getElementById("contact-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-
-  // ── Matrix Fabric Section Full BG Reveal Observer ──
-  const matrixSection = document.getElementById("matrix-section");
-  if (matrixSection) {
-    new IntersectionObserver((entries) => {
-      entries.forEach((e) => document.body.classList.toggle("jp-revealed", e.isIntersecting));
-    }, { threshold: 0.05 }).observe(matrixSection);
-  }
-
-  // ── Neural Matrix Fabric Canvas Simulation (Optimized 60 FPS) ──
-  (function initMatrixFabric() {
-    const canvas = document.getElementById("matrix-fabric-canvas");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-
-    const CHARS = [
-      "const", "let", "var", "function", "return", "import", "from", "async", "await",
-      "0", "1", "x", "y", "z", "{", "}", "[", "]", "(", ")", "=>", ";", ":", "<", ">",
-      "=", "+", "-", "*", "/", "&&", "||", "AI", "ML", "code", "fabric", "neural", "node"
-    ];
-
-    let cols = 28;
-    let rows = 12;
-    let grid = [];
-    let isDragging = false;
-    let mouse = { x: -9999, y: -9999, px: -9999, py: -9999, vx: 0, vy: 0 };
-    let isVisible = true;
-
-    // Pause animation when out of view to save battery and CPU
-    new IntersectionObserver((entries) => {
-      isVisible = entries[0].isIntersecting;
-    }, { threshold: 0.01 }).observe(canvas);
-
-    function initGrid() {
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const w = rect.width || 800;
-      const h = rect.height || 400;
-
-      canvas.width = w;
-      canvas.height = h;
-
-      // Optimized node spacing for max performance (approx 250 nodes)
-      cols = Math.max(16, Math.floor(w / 42));
-      rows = Math.max(8, Math.floor(h / 32));
-
-      grid = [];
-      const cellW = w / (cols - 1);
-      const cellH = h / (rows - 1);
-
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const bx = c * cellW;
-          const by = r * cellH;
-          grid.push({
-            baseX: bx,
-            baseY: by,
-            x: bx,
-            y: by,
-            vx: 0,
-            vy: 0,
-            char: CHARS[Math.floor(Math.random() * CHARS.length)],
-            isBright: Math.random() < 0.12,
-            r, c,
-            phase: (c * 0.3) + (r * 0.25)
-          });
+        if (pctEl) pctEl.textContent = "100%";
+        if (fillEl) fillEl.style.width = "100%";
+        if (buggyEl) {
+          buggyEl.style.left = "calc(100% - 68px)";
+          buggyEl.classList.add("parked");
         }
       }
     }
+    requestAnimationFrame(animatePct);
 
-    function updatePhysics(t) {
-      const spring = 0.05;
-      const damping = 0.85;
-      const radiusSq = 140 * 140;
-
-      mouse.vx = mouse.x - mouse.px;
-      mouse.vy = mouse.y - mouse.py;
-      mouse.px = mouse.x;
-      mouse.py = mouse.y;
-
-      const hasMouse = mouse.x > -1000;
-      const totalNodes = grid.length;
-
-      for (let i = 0; i < totalNodes; i++) {
-        const node = grid[i];
-
-        // Ambient breeze formula
-        const breezeX = Math.sin(t * 1.5 + node.r * 0.4 + node.phase) * 5 * (node.r / rows);
-        const breezeY = Math.cos(t * 1.2 + node.c * 0.3) * 2.5 * (node.r / rows);
-
-        const targetX = node.baseX + breezeX;
-        const targetY = node.baseY + breezeY;
-
-        if (hasMouse) {
-          const dx = node.x - mouse.x;
-          const dy = node.y - mouse.y;
-          const dSq = dx * dx + dy * dy;
-
-          if (dSq < radiusSq && dSq > 0) {
-            const dist = Math.sqrt(dSq);
-            const force = (1 - dist / 140);
-            const push = force * (isDragging ? 32 : 18);
-
-            node.vx += (dx / dist) * push * 0.22;
-            node.vy += (dy / dist) * push * 0.22;
-
-            if (mouse.vx !== 0 || mouse.vy !== 0) {
-              node.vx += mouse.vx * force * 0.35;
-              node.vy += mouse.vy * force * 0.35;
-            }
-          }
-        }
-
-        const ax = (targetX - node.x) * spring;
-        const ay = (targetY - node.y) * spring;
-
-        node.vx = (node.vx + ax) * damping;
-        node.vy = (node.vy + ay) * damping;
-
-        node.x += node.vx;
-        node.y += node.vy;
+    function enterLobby() {
+      AudioController.playStart();
+      if (overlay) {
+        overlay.classList.add("hide");
+        setTimeout(() => { overlay.style.display = "none"; }, 800);
       }
+      setTimeout(() => {
+        if (toast) {
+          toast.classList.add("show");
+          setTimeout(() => toast.classList.remove("show"), 3500);
+        }
+      }, 2000);
     }
 
-    function render(t) {
-      const w = canvas.width;
-      const h = canvas.height;
-
-      // Fast background clear
-      ctx.fillStyle = "#050811";
-      ctx.fillRect(0, 0, w, h);
-
-      // 1. Single Path Batching for Grid Weave Threads (Silky Smooth)
-      ctx.beginPath();
-      ctx.strokeStyle = "rgba(60, 130, 210, 0.08)";
-      ctx.lineWidth = 0.75;
-
-      for (let c = 0; c < cols; c++) {
-        for (let r = 0; r < rows; r++) {
-          const idx = r * cols + c;
-          const node = grid[idx];
-          if (r === 0) ctx.moveTo(node.x, node.y);
-          else ctx.lineTo(node.x, node.y);
-        }
-      }
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const idx = r * cols + c;
-          const node = grid[idx];
-          if (c === 0) ctx.moveTo(node.x, node.y);
-          else ctx.lineTo(node.x, node.y);
-        }
-      }
-      ctx.stroke();
-
-      // 2. Optimized Text Rendering (Constant font & no shadow thrashing)
-      ctx.font = '12px "Roboto Mono", "Fira Code", monospace';
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
-      const totalNodes = grid.length;
-      for (let i = 0; i < totalNodes; i++) {
-        const node = grid[i];
-        if (node.isBright) {
-          ctx.fillStyle = "rgba(255, 185, 90, 0.85)";
-        } else {
-          ctx.fillStyle = "rgba(150, 195, 240, 0.35)";
-        }
-        ctx.fillText(node.char, node.x, node.y);
-      }
-
-      // 3. Center Hero Title & Radial Glow
-      const cx = w * 0.5;
-      const cy = h * 0.5;
-
-      // Radial warmth glow behind center title
-      const glowGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, Math.min(w * 0.35, 240));
-      glowGrad.addColorStop(0, "rgba(255, 120, 20, 0.25)");
-      glowGrad.addColorStop(0.5, "rgba(255, 70, 0, 0.08)");
-      glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = glowGrad;
-      ctx.fillRect(0, 0, w, h);
-
-      // Title Text
-      const isMobile = w < 600;
-      const titleText = isMobile ? "AKSHAY PATIL" : "AKSHAY KUMAR PATIL";
-      const titleFontSize = isMobile ? Math.min(24, w * 0.06) : Math.min(36, w * 0.038);
-
-      ctx.save();
-      ctx.font = `900 ${titleFontSize}px "Orbitron", "Inter", sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
-      // Enable glow ONLY for the title text
-      ctx.shadowColor = "rgba(255, 130, 30, 0.8)";
-      ctx.shadowBlur = 20;
-
-      const textGrad = ctx.createLinearGradient(cx - 180, cy, cx + 180, cy);
-      textGrad.addColorStop(0, "#ffe0b2");
-      textGrad.addColorStop(0.5, "#ff9e43");
-      textGrad.addColorStop(1, "#ff6b00");
-
-      ctx.fillStyle = textGrad;
-      ctx.fillText(titleText, cx, cy);
-
-      // Subtitle below title
-      ctx.shadowBlur = 8;
-      ctx.font = `500 ${Math.max(10, titleFontSize * 0.26)}px "Roboto Mono", monospace`;
-      ctx.fillStyle = "rgba(255, 215, 160, 0.85)";
-      ctx.fillText("AI / ML ENGINEER", cx, cy + titleFontSize * 0.85);
-
-      ctx.restore();
+    if (enterBtn) {
+      enterBtn.addEventListener("click", enterLobby);
+      setTimeout(() => {
+        document.addEventListener("keydown", function skip(e) {
+          document.removeEventListener("keydown", skip);
+          enterLobby();
+        }, { once: true });
+      }, 3400);
     }
-
-    function loop(time) {
-      if (isVisible) {
-        const t = time * 0.001;
-        updatePhysics(t);
-        render(t);
-      }
-      requestAnimationFrame(loop);
-    }
-
-    // Event Listeners with passive performance optimizations
-    canvas.addEventListener("pointerdown", (e) => {
-      isDragging = true;
-      const r = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - r.left;
-      mouse.y = e.clientY - r.top;
-      mouse.px = mouse.x;
-      mouse.py = mouse.y;
-    }, { passive: true });
-
-    window.addEventListener("pointermove", (e) => {
-      const r = canvas.getBoundingClientRect();
-      if (
-        e.clientX >= r.left &&
-        e.clientX <= r.right &&
-        e.clientY >= r.top &&
-        e.clientY <= r.bottom
-      ) {
-        mouse.x = e.clientX - r.left;
-        mouse.y = e.clientY - r.top;
-      } else if (!isDragging) {
-        mouse.x = -9999;
-        mouse.y = -9999;
-      }
-    }, { passive: true });
-
-    window.addEventListener("pointerup", () => {
-      isDragging = false;
-    }, { passive: true });
-
-    let resizeTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(initGrid, 150);
-    }, { passive: true });
-
-    initGrid();
-    requestAnimationFrame(loop);
   })();
 
-  // ── High-Accuracy Real-Time CNN Inference Engine ──
+  // ═══════════════════════════════════════════════════════════
+  // HIGH-ACCURACY REAL-TIME CNN INFERENCE ENGINE
+  // (LeNet-5 in-browser forward pass + interactive graph)
+  // ═══════════════════════════════════════════════════════════
   (function initNeuralActivity() {
     const drawCanvas = document.getElementById("neural-draw-canvas");
     const downCanvas = document.getElementById("neural-downsample-canvas");
@@ -700,7 +1044,6 @@ async function boot() {
 
     let isDrawing = false, hasDrawn = false, lastX = 0, lastY = 0;
 
-    // Helper to decode base64 Float32Array
     function decodeF32(b64) {
       const bin = atob(b64);
       const u8 = new Uint8Array(bin.length);
@@ -708,28 +1051,21 @@ async function boot() {
       return new Float32Array(u8.buffer);
     }
 
-    // LeNet-5 CNN Model Weights
     let W1 = null, B1 = null, W2 = null, B2 = null, W3 = null, B3 = null;
     function loadWeights() {
       if (window.MNIST_MODEL) {
-        W1 = decodeF32(window.MNIST_MODEL.W1); // (8, 1, 5, 5) = 200 floats
-        B1 = decodeF32(window.MNIST_MODEL.B1); // 8 floats
-        W2 = decodeF32(window.MNIST_MODEL.W2); // (16, 8, 5, 5) = 3200 floats
-        B2 = decodeF32(window.MNIST_MODEL.B2); // 16 floats
-        W3 = decodeF32(window.MNIST_MODEL.W3); // (256, 10) = 2560 floats
-        B3 = decodeF32(window.MNIST_MODEL.B3); // 10 floats
+        W1 = decodeF32(window.MNIST_MODEL.W1);
+        B1 = decodeF32(window.MNIST_MODEL.B1);
+        W2 = decodeF32(window.MNIST_MODEL.W2);
+        B2 = decodeF32(window.MNIST_MODEL.B2);
+        W3 = decodeF32(window.MNIST_MODEL.W3);
+        B3 = decodeF32(window.MNIST_MODEL.B3);
         return true;
       }
       return false;
     }
-
     loadWeights();
 
-    // ──────────────────────────────────────────────────────────────
-    //  FAST CLIENT-SIDE CNN FORWARD PASS (LeNet-5 architecture)
-    //  Input: 28x28 Float32Array (784 floats)
-    //  Output: class probabilities [0..9] + intermediate activations
-    // ──────────────────────────────────────────────────────────────
     function forwardCNN(input28) {
       if (!W1) loadWeights();
       if (!W1) {
@@ -741,23 +1077,19 @@ async function boot() {
         };
       }
 
-      // 1. Pad 28x28 input with 2 pixels on all sides (SAME_UPPER padding -> 32x32)
+      // Pad 28x28 -> 32x32
       const inPad = new Float32Array(32 * 32);
       for (let r = 0; r < 28; r++) {
         const inRow = r * 28;
         const padRow = (r + 2) * 32 + 2;
-        for (let c = 0; c < 28; c++) {
-          inPad[padRow + c] = input28[inRow + c];
-        }
+        for (let c = 0; c < 28; c++) inPad[padRow + c] = input28[inRow + c];
       }
 
-      // 2. Conv1: 8 filters of 5x5 + ReLU (output 8x28x28)
+      // Conv1: 8 filters 5x5 + ReLU
       const c1 = new Float32Array(8 * 28 * 28);
       const c1Mean = new Float32Array(8);
       for (let f = 0; f < 8; f++) {
-        const wBase = f * 25;
-        const bias = B1[f];
-        const fOffset = f * 784;
+        const wBase = f * 25, bias = B1[f], fOffset = f * 784;
         let sumAct = 0;
         for (let r = 0; r < 28; r++) {
           const outRow = fOffset + r * 28;
@@ -766,13 +1098,13 @@ async function boot() {
             for (let kr = 0; kr < 5; kr++) {
               const rBase = (r + kr) * 32 + c;
               const kBase = wBase + kr * 5;
-              sum += inPad[rBase]     * W1[kBase]
+              sum += inPad[rBase] * W1[kBase]
                    + inPad[rBase + 1] * W1[kBase + 1]
                    + inPad[rBase + 2] * W1[kBase + 2]
                    + inPad[rBase + 3] * W1[kBase + 3]
                    + inPad[rBase + 4] * W1[kBase + 4];
             }
-            const val = sum > 0 ? sum : 0; // ReLU
+            const val = sum > 0 ? sum : 0;
             c1[outRow + c] = val;
             sumAct += val;
           }
@@ -780,63 +1112,57 @@ async function boot() {
         c1Mean[f] = sumAct / 784;
       }
 
-      // 3. Pool1: 2x2 MaxPool stride 2 (output 8x14x14)
+      // Pool1: 2x2 MaxPool (output 8x14x14)
       const p1 = new Float32Array(8 * 14 * 14);
       for (let f = 0; f < 8; f++) {
-        const c1Base = f * 784;
-        const p1Base = f * 196;
+        const c1Base = f * 784, p1Base = f * 196;
         for (let r = 0; r < 14; r++) {
           const r2 = r * 2;
           for (let c = 0; c < 14; c++) {
             const c2 = c * 2;
-            const v0 = c1[c1Base + r2 * 28 + c2];
-            const v1 = c1[c1Base + r2 * 28 + c2 + 1];
-            const v2 = c1[c1Base + (r2 + 1) * 28 + c2];
-            const v3 = c1[c1Base + (r2 + 1) * 28 + c2 + 1];
-            p1[p1Base + r * 14 + c] = Math.max(v0, v1, v2, v3);
+            p1[p1Base + r * 14 + c] = Math.max(
+              c1[c1Base + r2 * 28 + c2],
+              c1[c1Base + r2 * 28 + c2 + 1],
+              c1[c1Base + (r2 + 1) * 28 + c2],
+              c1[c1Base + (r2 + 1) * 28 + c2 + 1]
+            );
           }
         }
       }
 
-      // 4. Pad 8x14x14 with 2 on all sides for Conv2 (SAME_UPPER padding -> 8x18x18)
+      // Pad 8x14x14 -> 8x18x18 for Conv2
       const p1Pad = new Float32Array(8 * 18 * 18);
       for (let f = 0; f < 8; f++) {
-        const srcBase = f * 196;
-        const dstBase = f * 324;
+        const srcBase = f * 196, dstBase = f * 324;
         for (let r = 0; r < 14; r++) {
           const srcRow = srcBase + r * 14;
           const dstRow = dstBase + (r + 2) * 18 + 2;
-          for (let c = 0; c < 14; c++) {
-            p1Pad[dstRow + c] = p1[srcRow + c];
-          }
+          for (let c = 0; c < 14; c++) p1Pad[dstRow + c] = p1[srcRow + c];
         }
       }
 
-      // 5. Conv2: 16 filters of 8x5x5 + ReLU (output 16x14x14)
+      // Conv2: 16 filters 8x5x5 + ReLU
       const c2 = new Float32Array(16 * 14 * 14);
       const c2Mean = new Float32Array(16);
       for (let f = 0; f < 16; f++) {
-        const wBaseF = f * 200; // 8 * 25
-        const bias = B2[f];
-        const outBase = f * 196;
+        const wBaseF = f * 200, bias = B2[f], outBase = f * 196;
         let sumAct = 0;
         for (let r = 0; r < 14; r++) {
           for (let c = 0; c < 14; c++) {
             let sum = bias;
             for (let inF = 0; inF < 8; inF++) {
-              const inFBase = inF * 324;
-              const wInFBase = wBaseF + inF * 25;
+              const inFBase = inF * 324, wInFBase = wBaseF + inF * 25;
               for (let kr = 0; kr < 5; kr++) {
                 const rBase = inFBase + (r + kr) * 18 + c;
                 const kBase = wInFBase + kr * 5;
-                sum += p1Pad[rBase]     * W2[kBase]
+                sum += p1Pad[rBase] * W2[kBase]
                      + p1Pad[rBase + 1] * W2[kBase + 1]
                      + p1Pad[rBase + 2] * W2[kBase + 2]
                      + p1Pad[rBase + 3] * W2[kBase + 3]
                      + p1Pad[rBase + 4] * W2[kBase + 4];
               }
             }
-            const val = sum > 0 ? sum : 0; // ReLU
+            const val = sum > 0 ? sum : 0;
             c2[outBase + r * 14 + c] = val;
             sumAct += val;
           }
@@ -844,11 +1170,10 @@ async function boot() {
         c2Mean[f] = sumAct / 196;
       }
 
-      // 6. Pool2: 3x3 MaxPool stride 3 on 14x14 -> 16x4x4 = 256 flattened features
+      // Pool2: 3x3 MaxPool stride 3 -> 16x4x4 = 256
       const flat256 = new Float32Array(256);
       for (let f = 0; f < 16; f++) {
-        const fBase = f * 196;
-        const flatBase = f * 16;
+        const fBase = f * 196, flatBase = f * 16;
         for (let r = 0; r < 4; r++) {
           const r3 = r * 3;
           for (let c = 0; c < 4; c++) {
@@ -865,14 +1190,12 @@ async function boot() {
         }
       }
 
-      // 7. Dense Classification Layer: 256 -> 10 classes + softmax
+      // Dense 256 -> 10 + Softmax
       const logits = new Float32Array(10);
       let maxLogit = -Infinity;
       for (let m = 0; m < 10; m++) {
         let s = B3[m];
-        for (let k = 0; k < 256; k++) {
-          s += flat256[k] * W3[k * 10 + m];
-        }
+        for (let k = 0; k < 256; k++) s += flat256[k] * W3[k * 10 + m];
         logits[m] = s;
         if (s > maxLogit) maxLogit = s;
       }
@@ -883,29 +1206,23 @@ async function boot() {
         probs[m] = Math.exp(logits[m] - maxLogit);
         sumExp += probs[m];
       }
-      for (let m = 0; m < 10; m++) {
-        probs[m] /= sumExp;
-      }
+      for (let m = 0; m < 10; m++) probs[m] /= sumExp;
 
       return { input28, c1Mean, c2Mean, flat256, probs };
     }
 
     let state = forwardCNN(new Float32Array(784));
 
-    // ──────────────────────────────────────────────────────────────
-    //  MNIST STANDARD PREPROCESSING: BOUNDING-BOX & CENTER-OF-MASS
-    // ──────────────────────────────────────────────────────────────
     function extract28x28() {
       const cw = drawCanvas.width, ch = drawCanvas.height;
       const raw = drawCtx.getImageData(0, 0, cw, ch).data;
-      let minX = cw, maxX = -1, minY = ch, maxY = -1;
-      let hasInk = false;
+      let minX = cw, maxX = -1, minY = ch, maxY = -1, hasInk = false;
 
       for (let y = 0; y < ch; y++) {
         for (let x = 0; x < cw; x++) {
           const idx = (y * cw + x) * 4;
-          const brightness = Math.max(raw[idx], raw[idx + 1], raw[idx + 2]);
-          if (brightness > 25) {
+          const br = Math.max(raw[idx], raw[idx + 1], raw[idx + 2]);
+          if (br > 25) {
             if (x < minX) minX = x;
             if (x > maxX) maxX = x;
             if (y < minY) minY = y;
@@ -915,16 +1232,13 @@ async function boot() {
         }
       }
 
-      const tensor28 = new Float32Array(28 * 28);
+      const tensor28 = new Float32Array(784);
       if (!hasInk) {
         renderDownsamplePreview(tensor28);
         return tensor28;
       }
 
-      const bw = maxX - minX + 1;
-      const bh = maxY - minY + 1;
-
-      // Scale so the largest dimension fits inside 20 pixels
+      const bw = maxX - minX + 1, bh = maxY - minY + 1;
       let nw, nh;
       if (bw > bh) {
         nw = 20;
@@ -935,11 +1249,9 @@ async function boot() {
       }
 
       const tmp = document.createElement("canvas");
-      tmp.width = nw;
-      tmp.height = nh;
+      tmp.width = nw; tmp.height = nh;
       const tc = tmp.getContext("2d");
       tc.imageSmoothingEnabled = true;
-      tc.imageSmoothingQuality = "high";
       tc.drawImage(drawCanvas, minX, minY, bw, bh, 0, 0, nw, nh);
 
       const px = tc.getImageData(0, 0, nw, nh).data;
@@ -965,18 +1277,12 @@ async function boot() {
         return tensor28;
       }
 
-      // Compute Center of Mass
-      const cx = sumX / totalMass;
-      const cy = sumY / totalMass;
-
-      // Center around target (13.5, 13.5)
-      const targetX = Math.round(13.5 - cx);
-      const targetY = Math.round(13.5 - cy);
+      const cx = sumX / totalMass, cy = sumY / totalMass;
+      const targetX = Math.round(13.5 - cx), targetY = Math.round(13.5 - cy);
 
       for (let y = 0; y < nh; y++) {
         for (let x = 0; x < nw; x++) {
-          const tx = targetX + x;
-          const ty = targetY + y;
+          const tx = targetX + x, ty = targetY + y;
           if (tx >= 0 && tx < 28 && ty >= 0 && ty < 28) {
             tensor28[ty * 28 + tx] = Math.min(1, Math.max(0, gray[y * nw + x]));
           }
@@ -990,14 +1296,13 @@ async function boot() {
     function renderDownsamplePreview(tensor28) {
       downCtx.fillStyle = "#020409";
       downCtx.fillRect(0, 0, downCanvas.width, downCanvas.height);
-      const stepX = downCanvas.width / 28;
-      const stepY = downCanvas.height / 28;
+      const stepX = downCanvas.width / 28, stepY = downCanvas.height / 28;
 
       for (let r = 0; r < 28; r++) {
         for (let c = 0; c < 28; c++) {
           const v = tensor28[r * 28 + c];
           if (v > 0.02) {
-            downCtx.fillStyle = `rgba(112,232,255,${Math.min(1, v * 1.15)})`;
+            downCtx.fillStyle = `rgba(112,232,255,${Math.min(1, v * 1.25)})`;
             downCtx.fillRect(c * stepX, r * stepY, Math.max(1, stepX - 0.4), Math.max(1, stepY - 0.4));
           }
         }
@@ -1013,22 +1318,24 @@ async function boot() {
     function renderOutput(probs) {
       let top = 0;
       for (let d = 1; d < 10; d++) if (probs[d] > probs[top]) top = d;
-      if (predValEl)   predValEl.textContent   = hasDrawn ? top : "?";
+      if (predValEl) predValEl.textContent = hasDrawn ? top : "?";
       if (confBadgeEl) confBadgeEl.textContent = hasDrawn ? (probs[top] * 100).toFixed(1) + "%" : "0%";
       if (!probListEl) return;
       probListEl.innerHTML = Array.from({length: 10}, (_, d) => {
         const pct = (probs[d] * 100).toFixed(1);
-        return `<div class="prob-item ${hasDrawn && d === top ? 'active' : ''}">
-          <span class="prob-digit">${d}</span>
-          <div class="prob-bar-track"><div class="prob-bar-fill" style="width:${hasDrawn ? pct : 0}%"></div></div>
-          <span class="prob-val">${pct}%</span></div>`;
-      }).join('');
+        return `
+          <div class="prob-row">
+            <span class="prob-digit">${d}</span>
+            <div class="prob-bar"><div class="prob-bar-fill" style="width:${hasDrawn ? pct : 0}%"></div></div>
+            <span class="prob-pct">${pct}%</span>
+          </div>`;
+      }).join("");
     }
 
     function clearDrawing() {
-      drawCtx.fillStyle = "#03060c";
+      drawCtx.fillStyle = "#000";
       drawCtx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
-      downCtx.fillStyle = "#020409";
+      downCtx.fillStyle = "#000";
       downCtx.fillRect(0, 0, downCanvas.width, downCanvas.height);
       hasDrawn = false;
       processDrawing();
@@ -1040,7 +1347,7 @@ async function boot() {
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
       return {
         x: (cx - r.left) * (drawCanvas.width / r.width),
-        y: (cy - r.top)  * (drawCanvas.height / r.height)
+        y: (cy - r.top) * (drawCanvas.height / r.height)
       };
     }
 
@@ -1058,7 +1365,7 @@ async function boot() {
       drawCtx.beginPath(); drawCtx.moveTo(lastX, lastY); drawCtx.lineTo(p.x, p.y);
       drawCtx.strokeStyle = "#70e8ff"; drawCtx.lineWidth = 14;
       drawCtx.lineCap = "round"; drawCtx.lineJoin = "round";
-      drawCtx.shadowColor = "rgba(112,232,255,0.8)"; drawCtx.shadowBlur = 8;
+      drawCtx.shadowColor = "rgba(112,232,255,0.85)"; drawCtx.shadowBlur = 9;
       drawCtx.stroke(); drawCtx.shadowBlur = 0;
       lastX = p.x; lastY = p.y;
       processDrawing();
@@ -1071,8 +1378,8 @@ async function boot() {
     drawCanvas.addEventListener("mousemove", moveDraw);
     window.addEventListener("mouseup", stopDraw);
     drawCanvas.addEventListener("touchstart", e => { e.preventDefault(); startDraw(e); }, { passive: false });
-    drawCanvas.addEventListener("touchmove",  e => { e.preventDefault(); moveDraw(e);  }, { passive: false });
-    drawCanvas.addEventListener("touchend",   stopDraw);
+    drawCanvas.addEventListener("touchmove", e => { e.preventDefault(); moveDraw(e); }, { passive: false });
+    drawCanvas.addEventListener("touchend", stopDraw);
 
     // ──────────────────────────────────────────────────────────────
     //  INTERACTIVE REAL-TIME CNN GRAPH VISUALIZER
@@ -1089,6 +1396,7 @@ async function boot() {
 
     function setupGraph() {
       const wrap = graphCanvas.parentElement;
+      if (!wrap) return;
       const W = wrap.offsetWidth  || wrap.getBoundingClientRect().width  || 500;
       const H = Math.max(280, wrap.offsetHeight || wrap.getBoundingClientRect().height || 300);
       graphCanvas.width = W; graphCanvas.height = H;
@@ -1144,9 +1452,10 @@ async function boot() {
 
     function drawGraph() {
       const W = graphCanvas.width, H = graphCanvas.height;
+      if (W === 0 || H === 0) return;
       graphCtx.fillStyle = "#02050b"; graphCtx.fillRect(0, 0, W, H);
 
-      // Draw Synapses
+      // Draw Synapses (Glowing Cyan for excitatory, Glowing Red/Orange for inhibitory)
       conns.forEach(c => {
         const srcAct = getAct(c.layer, c.srcIdx);
         const signal = Math.abs(c.w * srcAct);
@@ -1168,9 +1477,9 @@ async function boot() {
         graphCtx.stroke();
       });
 
-      // Flowing computation pulses along active circuits
-      if (hasDrawn && Math.random() < 0.35) {
-        const activeConns = conns.filter(c => getAct(c.layer, c.srcIdx) > 0.15);
+      // Flowing computation pulses (signals traveling forward along active circuits)
+      if (hasDrawn && Math.random() < 0.45) {
+        const activeConns = conns.filter(c => getAct(c.layer, c.srcIdx) > 0.12);
         if (activeConns.length) {
           const c = activeConns[Math.floor(Math.random() * activeConns.length)];
           pulses.push({
@@ -1189,7 +1498,7 @@ async function boot() {
       });
       pulses = pulses.filter(p => p.t < 1);
 
-      // Draw Neurons
+      // Draw Neurons with halos
       nodes.forEach(nd => {
         const act = getAct(nd.layer, nd.index);
         const hov = hovObj?.type === "node" && hovObj.data === nd;
@@ -1202,10 +1511,10 @@ async function boot() {
         } else if (hasDrawn && act > 0.05) {
           if (nd.layer === 3) {
             graphCtx.fillStyle = `rgba(255,158,67,${0.35 + act * 0.65})`;
-            graphCtx.shadowColor = "rgba(255,158,67,0.8)"; graphCtx.strokeStyle = "#ffb86c";
+            graphCtx.shadowColor = "rgba(255,158,67,0.85)"; graphCtx.strokeStyle = "#ffb86c";
           } else {
             graphCtx.fillStyle = `rgba(112,232,255,${0.25 + act * 0.75})`;
-            graphCtx.shadowColor = "rgba(112,232,255,0.8)"; graphCtx.strokeStyle = "#70e8ff";
+            graphCtx.shadowColor = "rgba(112,232,255,0.85)"; graphCtx.strokeStyle = "#70e8ff";
           }
           graphCtx.shadowBlur = 6 + act * 10; graphCtx.lineWidth = 1.8;
         } else {
@@ -1223,13 +1532,6 @@ async function boot() {
         }
       });
     }
-
-    let isGraphVisible = true;
-    new IntersectionObserver((entries) => {
-      isGraphVisible = entries[0].isIntersecting;
-    }, { threshold: 0.01 }).observe(graphCanvas);
-
-    function graphLoop() { if (isGraphVisible) drawGraph(); requestAnimationFrame(graphLoop); }
 
     function distSeg(p, v, w) {
       const l2 = (w.x - v.x) ** 2 + (w.y - v.y) ** 2;
@@ -1284,52 +1586,25 @@ async function boot() {
     graphCanvas.addEventListener("pointerleave", () => { hovObj = null; if (tooltip) tooltip.style.display = "none"; });
 
     const graphWrap = graphCanvas.parentElement;
-    // Use ResizeObserver only to do an initial setup once the canvas has a real size.
-    // After that, rely on the window resize listener so the observer stays connected.
     const ro = new ResizeObserver(entries => {
       const { width, height } = entries[0].contentRect;
       if (width > 10 && height > 10) { setupGraph(); }
     });
-    ro.observe(graphWrap);
-    requestAnimationFrame(() => {
-      const r = graphWrap.getBoundingClientRect();
-      if (r.width > 10 && r.height > 10) { setupGraph(); }
-    });
+    if (graphWrap) ro.observe(graphWrap);
     window.addEventListener("resize", () => { clearTimeout(window.__nrt); window.__nrt = setTimeout(setupGraph, 150); });
 
+    function graphLoop() {
+      drawGraph();
+      requestAnimationFrame(graphLoop);
+    }
     requestAnimationFrame(graphLoop);
-    clearDrawing();
+    setupGraph();
   })();
 }
 
-boot().catch((error) => {
-  console.error("Portfolio failed to load", error);
-  const headline = document.getElementById("headline");
-  const summaryList = document.getElementById("summary-list");
-  if (headline) {
-    headline.textContent = "Portfolio content is loading with a temporary issue.";
-  }
-  if (summaryList) {
-    summaryList.innerHTML = "<li>Please refresh the page once. If the issue continues, restart the local Python server.</li>";
-  }
-});
-
-(() => {
-  const reveal = document.getElementById("hero-identity-reveal");
-  if (!reveal || window.matchMedia("(pointer: coarse)").matches) return;
-
-  reveal.addEventListener("pointermove", (event) => {
-    const rect = reveal.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    reveal.style.setProperty("--reveal-x", `${x}px`);
-    reveal.style.setProperty("--reveal-y", `${y}px`);
-    reveal.style.setProperty("--reveal-size", "160px");
-    reveal.classList.add("is-revealing");
-  });
-
-  reveal.addEventListener("pointerleave", () => {
-    reveal.style.setProperty("--reveal-size", "0px");
-    reveal.classList.remove("is-revealing");
-  });
-})();
+// Boot application when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot);
+} else {
+  boot();
+}
