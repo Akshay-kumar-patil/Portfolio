@@ -188,11 +188,11 @@
             <div class="pedestal-shadow"></div>
           </div>
 
-          <!-- Drag-to-Rotate Interactive Soldier Wrapper -->
+          <!-- Interactive 3D Perspective Character Rotator -->
           <div class="soldier-rotator" id="soldier-rotator-lobby">
             <img class="pubg-character-img" id="lobby-character-img"
-              src="/static/img/pubg_soldier_character.png"
-              alt="Akshay Kumar Patil - PUBG Mobile Programmer Soldier with Level 3 Helmet and Military Laptop"
+              src="/static/img/akshay_operator.png"
+              alt="Akshay Kumar Patil - PUBG Tactical Operator"
               draggable="false" />
           </div>
 
@@ -200,10 +200,6 @@
           <div class="operator-tag-badge">
             <span class="op-id">OPERATOR // AKSHAY-01</span>
             <span class="op-spec">AI / ML &amp; RAG ARCHITECTURE</span>
-          </div>
-
-          <div class="rotate-hint" aria-hidden="true">
-            <span class="hint-icon">⟳</span> DRAG TO ROTATE OPERATOR
           </div>
         </div>
       </section>
@@ -337,20 +333,14 @@
         </div>
       </div>
 
-      <!-- Main Split Layout (Left Character Bay, Right Grid & Detail Drawer) -->
+      <!-- Main Inventory Body Layout -->
       <div class="pubg-inv-body">
 
-        <!-- Left Character Bay -->
-        <div class="pubg-inv-character-bay" aria-label="Operator Inspection">
+        <!-- 1. Center-Left: 3D Character Bay -->
+        <div class="pubg-inv-character-bay" id="inv-character-bay" aria-label="Operator 3D Inspection">
           <div class="inv-spotlight" aria-hidden="true"></div>
-          <div class="soldier-rotator" id="soldier-rotator-inv">
-            <img class="pubg-character-img" id="inv-character-img"
-              src="/static/img/pubg_soldier_character.png"
-              alt="Akshay Kumar Patil - Character Loadout Preview"
-              draggable="false" />
-          </div>
 
-          <!-- Ground Ring & Shadow -->
+          <!-- Circular Tactical Pedestal -->
           <div class="pedestal-wrap" aria-hidden="true">
             <div class="pedestal-disc"></div>
             <div class="pedestal-ring pedestal-ring--outer"></div>
@@ -358,117 +348,85 @@
             <div class="pedestal-shadow"></div>
           </div>
 
+          <!-- Interactive 3D Perspective Character Rotator -->
+          <div class="soldier-rotator" id="soldier-rotator-inv">
+            <img class="pubg-character-img" id="inv-character-img"
+              src="/static/img/akshay_operator.png"
+              alt="Akshay Kumar Patil - Operator Character Loadout"
+              draggable="false" />
+          </div>
+
           <!-- Current Loadout Summary Chips -->
           <div class="inv-equipped-summary">
-            <div class="eq-chip"><span class="eq-icon">🔫</span> <span class="eq-text">PRIMARY: PYTHON / PYTORCH</span></div>
-            <div class="eq-chip"><span class="eq-icon">🪖</span> <span class="eq-text">HELMET: B.TECH AI &amp; ML</span></div>
-            <div class="eq-chip"><span class="eq-icon">🎒</span> <span class="eq-text">VEST: FASTAPI / RAG ENGINE</span></div>
+            <div class="eq-chip"><span class="eq-icon">🔫</span> <span class="eq-text" id="chip-loadout-weapon">PRIMARY: HEALIX // RAG</span></div>
+            <div class="eq-chip"><span class="eq-icon">👕</span> <span class="eq-text" id="chip-loadout-outfit">OUTFIT: AI/ML COMBAT SUIT</span></div>
+            <div class="eq-chip"><span class="eq-icon">🪖</span> <span class="eq-text" id="chip-loadout-helmet">HELMET: B.TECH AI &amp; ML</span></div>
+            <div class="eq-chip"><span class="eq-icon">🎒</span> <span class="eq-text" id="chip-loadout-gear">VEST: RAG &amp; LLM VEST</span></div>
           </div>
+        </div>
 
-          <div class="rotate-hint" aria-hidden="true">
-            <span class="hint-icon">⟳</span> DRAG TO ROTATE
-          </div>
+        <!-- 2. Right Side: Real Interactive Inventory Suite -->
+        <div class="pubg-inv-workspace" id="pubg-inv-workspace">
 
-          <!-- PUBG MOBILE-Inspired Project Inspection Glass Panel -->
-          <aside class="project-glass-panel" id="project-glass-panel" aria-label="Project Inspection Panel" aria-hidden="true">
-            <div class="glass-panel-header">
-              <div class="glass-header-left">
-                <span class="glass-status-dot"></span>
-                <span class="glass-category-tag" id="glass-category-tag">AI/ML · RAG PIPELINE</span>
-                <span class="glass-rarity-pill" id="glass-rarity-pill">MYTHIC</span>
+          <!-- Selected Item Details Panel (immediately left of Item Grid) -->
+          <aside class="inv-details-panel" id="inv-details-panel" aria-label="Selected Item Details & Controls">
+            <div class="details-panel-header">
+              <div class="details-header-left">
+                <span class="details-status-dot" id="details-status-dot"></span>
+                <span class="details-category-tag" id="details-category-tag">WEAPONS // PROJECT</span>
+                <span class="details-rarity-pill" id="details-rarity-pill">MYTHIC</span>
               </div>
-              <button class="glass-close-btn" id="glass-close-btn" type="button" aria-label="Close Project Details" title="Close Panel (ESC)">✕</button>
+              <span class="details-equipped-indicator" id="details-equipped-indicator">EQUIPPED</span>
             </div>
 
-            <div class="glass-title-block">
-              <h3 class="glass-project-title" id="glass-project-title">HEALIX</h3>
-              <p class="glass-project-tagline" id="glass-project-tagline">Self-healing RAG pipeline with automated query re-write.</p>
-            </div>
-
-            <div class="glass-divider" aria-hidden="true"></div>
-
-            <div class="glass-content-scroll">
-              <div class="glass-section">
-                <span class="glass-section-label">MISSION BRIEF // OVERVIEW</span>
-                <p class="glass-description" id="glass-description"></p>
-              </div>
-
-              <div class="glass-section">
-                <span class="glass-section-label">KEY COMBAT FEATURES</span>
-                <ul class="glass-features-list" id="glass-features-list"></ul>
-              </div>
-
-              <div class="glass-section">
-                <span class="glass-section-label">TECH SPECIFICATIONS</span>
-                <div class="glass-tech-grid" id="glass-tech-grid"></div>
+            <div class="details-title-block">
+              <div class="details-preview-icon" id="details-preview-icon">🔥</div>
+              <div class="details-title-info">
+                <h3 class="details-item-title" id="details-item-title">HEALIX</h3>
+                <p class="details-item-tagline" id="details-item-tagline">Self-healing RAG pipeline with automated query re-write.</p>
               </div>
             </div>
 
-            <div class="glass-panel-footer">
-              <a class="glass-action-btn glass-btn-primary" id="glass-repo-btn" href="#" target="_blank" rel="noreferrer" title="View GitHub Repository">
-                <svg class="btn-git-icon" viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+            <div class="details-divider" aria-hidden="true"></div>
+
+            <div class="details-content-scroll">
+              <div class="details-section">
+                <span class="details-section-label">MISSION BRIEF // OVERVIEW</span>
+                <p class="details-description" id="details-description"></p>
+              </div>
+
+              <div class="details-section">
+                <span class="details-section-label">ATTRIBUTES &amp; SPECIFICATIONS</span>
+                <ul class="details-specs-list" id="details-specs-list"></ul>
+              </div>
+
+              <div class="details-section" id="details-tech-section">
+                <span class="details-section-label">TECHNOLOGY STACK</span>
+                <div class="details-tech-grid" id="details-tech-grid"></div>
+              </div>
+            </div>
+
+            <div class="details-panel-footer">
+              <!-- Equip / Unequip Toggle Button -->
+              <button class="details-action-btn details-btn-equip" id="details-equip-btn" type="button">
+                ⚡ EQUIP ITEM
+              </button>
+              <!-- Repository Button (for projects) -->
+              <a class="details-action-btn details-btn-repo" id="details-repo-btn" href="#" target="_blank" rel="noreferrer" title="Open GitHub Repository">
+                <svg class="btn-git-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                   <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
                 </svg>
                 VIEW REPOSITORY
               </a>
-              <a class="glass-action-btn glass-btn-secondary" id="glass-demo-btn" href="#" target="_blank" rel="noreferrer" style="display:none;" title="Open Live Demo">
+              <!-- Secondary Action Button (Demo / Launch / PDF) -->
+              <a class="details-action-btn details-btn-secondary" id="details-secondary-btn" href="#" target="_blank" rel="noreferrer" style="display:none;">
                 LIVE DEMO ➔
               </a>
             </div>
           </aside>
-        </div>
 
-        <!-- Right Side: Categories Tabs + Items Grid + Detail Drawer -->
-        <div class="pubg-inv-panel">
-
-          <!-- Category Navigation Tabs (PUBG Mobile vertical icons) -->
-          <nav class="pubg-category-tabs" id="pubg-category-tabs" aria-label="Inventory Categories">
-            <!-- 1. OUTFIT -> About Me -->
-            <button class="cat-tab" data-cat="outfit" type="button" aria-selected="false">
-              <span class="cat-icon">👕</span>
-              <span class="cat-label">OUTFIT</span>
-              <span class="cat-sub">ABOUT ME</span>
-            </button>
-            <!-- 2. HEADGEAR -> Education -->
-            <button class="cat-tab" data-cat="headgear" type="button" aria-selected="false">
-              <span class="cat-icon">🪖</span>
-              <span class="cat-label">HEADGEAR</span>
-              <span class="cat-sub">EDUCATION</span>
-            </button>
-            <!-- 3. WEAPONS -> Projects -->
-            <button class="cat-tab active" data-cat="weapons" type="button" aria-selected="true">
-              <span class="cat-icon">🔫</span>
-              <span class="cat-label">WEAPONS</span>
-              <span class="cat-sub">PROJECTS</span>
-            </button>
-            <!-- 4. GEAR -> Technical Skills -->
-            <button class="cat-tab" data-cat="gear" type="button" aria-selected="false">
-              <span class="cat-icon">🎒</span>
-              <span class="cat-label">GEAR</span>
-              <span class="cat-sub">SKILLS</span>
-            </button>
-            <!-- 5. COLLECTIONS -> Achievements -->
-            <button class="cat-tab" data-cat="collections" type="button" aria-selected="false">
-              <span class="cat-icon">🏆</span>
-              <span class="cat-label">COLLECTIONS</span>
-              <span class="cat-sub">AWARDS</span>
-            </button>
-            <!-- 6. SUPPLY CRATE -> Resume & Resources -->
-            <button class="cat-tab" data-cat="supply" type="button" aria-selected="false">
-              <span class="cat-icon">📦</span>
-              <span class="cat-label">SUPPLY CRATE</span>
-              <span class="cat-sub">RESUME</span>
-            </button>
-            <!-- 7. LAB -> Neural Activity CNN Demo -->
-            <button class="cat-tab cat-tab--lab" data-cat="lab" type="button" aria-selected="false">
-              <span class="cat-icon">🧠</span>
-              <span class="cat-label">LAB</span>
-              <span class="cat-sub">CNN DEMO</span>
-            </button>
-          </nav>
-
-          <!-- Middle: Dynamic Items Grid Container -->
-          <div class="pubg-grid-scroll-wrap">
+          <!-- Compact Item Grid (immediately left of Category Sidebar) -->
+          <div class="inv-grid-container" id="inv-grid-container">
             <div class="category-banner">
               <span class="cat-banner-title" id="cat-banner-title">WEAPONS // FEATURED PROJECTS</span>
               <span class="cat-banner-count" id="cat-banner-count">7 ITEMS EQUIPPED</span>
@@ -478,32 +436,51 @@
             </div>
           </div>
 
-          <!-- Bottom: Selected Item Detail / Inspection Drawer -->
-          <aside class="pubg-item-detail-drawer" id="pubg-item-detail-drawer" aria-label="Item Inspection">
-            <div class="detail-header">
-              <div class="detail-titles">
-                <div class="detail-rarity-row">
-                  <span class="detail-rarity-badge" id="detail-rarity-badge">MYTHIC</span>
-                  <span class="detail-category-tag" id="detail-category-tag">ASSAULT RAG</span>
-                </div>
-                <h3 class="detail-title" id="detail-title">HEALIX // RAG ORCHESTRATOR</h3>
-                <p class="detail-tagline" id="detail-tagline">Self-healing RAG pipeline with automated query re-write.</p>
-              </div>
-              <div class="detail-actions" id="detail-actions">
-                <!-- Action Buttons injected dynamically -->
-              </div>
-            </div>
-            <div class="detail-body">
-              <div class="detail-desc-box">
-                <p class="detail-desc" id="detail-desc"></p>
-                <ul class="detail-points" id="detail-points"></ul>
-              </div>
-              <div class="detail-specs-box">
-                <span class="specs-title">TECH SPECIFICATIONS / PARAMETERS:</span>
-                <div class="detail-tech-chips" id="detail-tech-chips"></div>
-              </div>
-            </div>
-          </aside>
+          <!-- Narrow Vertical Inventory Category Menu on the FAR RIGHT -->
+          <nav class="pubg-category-sidebar" id="pubg-category-tabs" aria-label="Inventory Categories">
+            <!-- 1. OUTFIT -->
+            <button class="cat-tab" data-cat="outfit" type="button" aria-selected="false">
+              <span class="cat-icon">👕</span>
+              <span class="cat-label">OUTFIT</span>
+              <span class="cat-sub">SUITS</span>
+            </button>
+            <!-- 2. HEADGEAR -->
+            <button class="cat-tab" data-cat="headgear" type="button" aria-selected="false">
+              <span class="cat-icon">🪖</span>
+              <span class="cat-label">HEADGEAR</span>
+              <span class="cat-sub">EDUCATION</span>
+            </button>
+            <!-- 3. WEAPONS -->
+            <button class="cat-tab active" data-cat="weapons" type="button" aria-selected="true">
+              <span class="cat-icon">🔫</span>
+              <span class="cat-label">WEAPONS</span>
+              <span class="cat-sub">PROJECTS</span>
+            </button>
+            <!-- 4. GEAR -->
+            <button class="cat-tab" data-cat="gear" type="button" aria-selected="false">
+              <span class="cat-icon">🎒</span>
+              <span class="cat-label">GEAR</span>
+              <span class="cat-sub">SKILLS</span>
+            </button>
+            <!-- 5. COLLECTIONS -->
+            <button class="cat-tab" data-cat="collections" type="button" aria-selected="false">
+              <span class="cat-icon">🏆</span>
+              <span class="cat-label">COLLECTIONS</span>
+              <span class="cat-sub">AWARDS</span>
+            </button>
+            <!-- 6. SUPPLY CRATE -->
+            <button class="cat-tab" data-cat="supply" type="button" aria-selected="false">
+              <span class="cat-icon">📦</span>
+              <span class="cat-label">SUPPLY</span>
+              <span class="cat-sub">RESUME</span>
+            </button>
+            <!-- 7. LAB -->
+            <button class="cat-tab cat-tab--lab" data-cat="lab" type="button" aria-selected="false">
+              <span class="cat-icon">🧠</span>
+              <span class="cat-label">LAB</span>
+              <span class="cat-sub">CNN DEMO</span>
+            </button>
+          </nav>
 
         </div>
       </div>
@@ -590,6 +567,16 @@
           </div>
         </div>
       </div>
+      <section class="neural-fabric-panel" aria-label="Neural Matrix Fabric">
+        <div class="fabric-header">
+          <div>
+            <span class="fabric-eyebrow">NEURAL FABRIC</span>
+            <p>Live signal field connecting the neural layers.</p>
+          </div>
+          <span class="fabric-status"><span></span> SYNAPSES ONLINE</span>
+        </div>
+        <canvas id="neural-fabric-canvas" aria-label="Animated neural network fabric"></canvas>
+      </section>
     </div>
   </div>
 
@@ -687,6 +674,8 @@
   </div>
 
   <!-- Scripts -->
+  <script src="/static/js/vendor/three.min.js"></script>
+  <script src="/static/js/vendor/GLTFLoader.js"></script>
   <script src="/static/js/mnist_weights.js"></script>
   <script src="/static/js/main.js"></script>
 </body>
