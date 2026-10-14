@@ -32,7 +32,7 @@ const AudioController = {
       gain.connect(this.ctx.destination);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.04);
-    } catch (_) {}
+    } catch (_) { }
   },
 
   playTab() {
@@ -51,7 +51,7 @@ const AudioController = {
       gain.connect(this.ctx.destination);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.06);
-    } catch (_) {}
+    } catch (_) { }
   },
 
   playEquip() {
@@ -70,7 +70,7 @@ const AudioController = {
       gain.connect(this.ctx.destination);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.1);
-    } catch (_) {}
+    } catch (_) { }
   },
 
   playStart() {
@@ -91,7 +91,7 @@ const AudioController = {
         osc.start(now + idx * 0.05);
         osc.stop(now + idx * 0.05 + 0.3);
       });
-    } catch (_) {}
+    } catch (_) { }
   }
 };
 
@@ -202,7 +202,6 @@ async function boot() {
     AudioController.playClick();
     if (screenInventory) screenInventory.classList.remove("active");
     if (screenLobby) screenLobby.classList.add("active");
-    closeProjectGlassPanel();
   }
 
   function showInventory(targetCategory = null) {
@@ -239,6 +238,7 @@ async function boot() {
   const resumeModal = document.getElementById("resume-modal");
   const careerModal = document.getElementById("career-modal");
   const commsModal = document.getElementById("comms-modal");
+  initNeuralFabric();
 
   function openModal(modal) {
     AudioController.playClick();
@@ -278,11 +278,6 @@ async function boot() {
   // Keyboard Shortcuts (ESC, I, M)
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
-      if (projectGlassPanel?.classList.contains("active")) {
-        closeProjectGlassPanel();
-        e.preventDefault();
-        return;
-      }
       if (labModal?.classList.contains("active")) closeModal(labModal);
       else if (resumeModal?.classList.contains("active")) closeModal(resumeModal);
       else if (careerModal?.classList.contains("active")) closeModal(careerModal);
@@ -314,108 +309,18 @@ async function boot() {
   const catCountEl = document.getElementById("cat-banner-count");
 
   // Detail drawer elements
-  const detailRarityBadge = document.getElementById("detail-rarity-badge");
-  const detailCatTag = document.getElementById("detail-category-tag");
-  const detailTitle = document.getElementById("detail-title");
-  const detailTagline = document.getElementById("detail-tagline");
-  const detailDesc = document.getElementById("detail-desc");
-  const detailPoints = document.getElementById("detail-points");
-  const detailTechChips = document.getElementById("detail-tech-chips");
-  const detailActions = document.getElementById("detail-actions");
-
-  // PUBG MOBILE-Inspired Project Inspection Glass Panel
-  const projectGlassPanel = document.getElementById("project-glass-panel");
-  const glassCloseBtn = document.getElementById("glass-close-btn");
-  const glassTitle = document.getElementById("glass-project-title");
-  const glassTagline = document.getElementById("glass-project-tagline");
-  const glassCategory = document.getElementById("glass-category-tag");
-  const glassRarity = document.getElementById("glass-rarity-pill");
-  const glassDesc = document.getElementById("glass-description");
-  const glassFeatures = document.getElementById("glass-features-list");
-  const glassTechGrid = document.getElementById("glass-tech-grid");
-  const glassRepoBtn = document.getElementById("glass-repo-btn");
-  const glassDemoBtn = document.getElementById("glass-demo-btn");
-  let activeProjectId = null;
-
-  function openProjectGlassPanel(item) {
-    if (!projectGlassPanel) return;
-
-    activeProjectId = item.id;
-    const isAlreadyOpen = projectGlassPanel.classList.contains("active");
-
-    const populateGlass = () => {
-      if (glassTitle) glassTitle.textContent = item.name;
-      if (glassTagline) glassTagline.textContent = item.tagline || item.sub || "";
-      if (glassCategory) glassCategory.textContent = item.category || item.tag || "WEAPONS // PROJECT";
-      if (glassRarity) {
-        glassRarity.textContent = (item.rarity || "COMMON").toUpperCase();
-        glassRarity.className = `glass-rarity-pill ${item.rarity || 'common'}`;
-      }
-      if (glassDesc) glassDesc.textContent = item.desc || "";
-
-      if (glassFeatures) {
-        glassFeatures.innerHTML = (item.details || []).map(f => `<li>${f}</li>`).join("");
-      }
-
-      if (glassTechGrid) {
-        glassTechGrid.innerHTML = (item.tech || []).map(t => `<span class="glass-tech-chip">${t}</span>`).join("");
-      }
-
-      if (glassRepoBtn) {
-        glassRepoBtn.href = item.repo || "#";
-        glassRepoBtn.title = `View ${item.name} GitHub Repository`;
-      }
-
-      if (glassDemoBtn) {
-        if (item.demo) {
-          glassDemoBtn.href = item.demo;
-          glassDemoBtn.style.display = "inline-flex";
-          glassDemoBtn.title = `Open ${item.name} Live Demo`;
-        } else {
-          glassDemoBtn.style.display = "none";
-        }
-      }
-    };
-
-    if (isAlreadyOpen) {
-      projectGlassPanel.style.transition = "opacity 120ms ease, transform 120ms ease";
-      projectGlassPanel.style.opacity = "0.7";
-      projectGlassPanel.style.transform = "translateX(5px)";
-      setTimeout(() => {
-        populateGlass();
-        projectGlassPanel.style.opacity = "1";
-        projectGlassPanel.style.transform = "translateX(0)";
-      }, 100);
-    } else {
-      populateGlass();
-      projectGlassPanel.classList.add("active");
-      projectGlassPanel.setAttribute("aria-hidden", "false");
-    }
-  }
-
-  function closeProjectGlassPanel() {
-    if (!projectGlassPanel) return;
-    projectGlassPanel.classList.remove("active");
-    projectGlassPanel.setAttribute("aria-hidden", "true");
-    activeProjectId = null;
-    if (currentCategory === "weapons") {
-      document.querySelectorAll(".pubg-item-card.selected").forEach(c => c.classList.remove("selected"));
-    }
-  }
-
-  glassCloseBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    AudioController.playClick();
-    closeProjectGlassPanel();
-  });
-
-  glassRepoBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
-
-  glassDemoBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
+  const detailRarityBadge = document.getElementById("details-rarity-pill");
+  const detailCatTag = document.getElementById("details-category-tag");
+  const detailTitle = document.getElementById("details-item-title");
+  const detailTagline = document.getElementById("details-item-tagline");
+  const detailDesc = document.getElementById("details-description");
+  const detailPoints = document.getElementById("details-specs-list");
+  const detailTechChips = document.getElementById("details-tech-grid");
+  const detailRepoBtn = document.getElementById("details-repo-btn");
+  const detailSecondaryBtn = document.getElementById("details-secondary-btn");
+  const detailPreviewIcon = document.getElementById("details-preview-icon");
+  const detailEquipped = document.getElementById("details-equipped-indicator");
+  const detailEquipBtn = document.getElementById("details-equip-btn");
 
   let currentCategory = "weapons";
   let activeItemsList = [];
@@ -760,10 +665,6 @@ async function boot() {
     AudioController.playTab();
     currentCategory = catKey;
 
-    if (catKey !== "weapons") {
-      closeProjectGlassPanel();
-    }
-
     categoryTabs.forEach(tab => {
       const isMatch = tab.getAttribute("data-cat") === catKey;
       tab.classList.toggle("active", isMatch);
@@ -794,55 +695,6 @@ async function boot() {
     });
   });
 
-  // Populate Detail Drawer
-  function populateDetailDrawer(item) {
-    if (detailRarityBadge) {
-      detailRarityBadge.textContent = item.rarity?.toUpperCase() || "COMMON";
-      detailRarityBadge.className = `detail-rarity-badge ${item.rarity}`;
-    }
-    if (detailCatTag) detailCatTag.textContent = item.tag || currentCategory.toUpperCase();
-    if (detailTitle) detailTitle.textContent = item.name;
-    if (detailTagline) detailTagline.textContent = item.tagline || item.sub;
-    if (detailDesc) detailDesc.textContent = item.desc || "";
-
-    if (detailPoints) {
-      detailPoints.innerHTML = (item.details || []).map(pt => `<li>${pt}</li>`).join("");
-    }
-
-    if (detailTechChips) {
-      detailTechChips.innerHTML = (item.tech || []).map(t => `<span class="tech-chip">${t}</span>`).join("");
-    }
-
-    if (detailActions) {
-      detailActions.innerHTML = "";
-      (item.actions || []).forEach(act => {
-        if (act.url) {
-          const a = document.createElement("a");
-          a.href = act.url;
-          a.target = "_blank";
-          a.rel = "noreferrer";
-          a.className = `pubg-action-btn ${act.primary ? '' : 'pubg-action-btn--secondary'}`;
-          a.textContent = act.label;
-          detailActions.appendChild(a);
-        } else if (act.callback) {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = `pubg-action-btn ${act.primary ? '' : 'pubg-action-btn--secondary'}`;
-          btn.textContent = act.label;
-          btn.addEventListener("click", act.callback);
-          detailActions.appendChild(btn);
-        }
-      });
-    }
-  }
-
-  // Select Item and Populate Drawer
-  function selectItem(item, cardEl) {
-    document.querySelectorAll(".pubg-item-card").forEach(c => c.classList.remove("selected"));
-    cardEl?.classList.add("selected");
-    populateDetailDrawer(item);
-  }
-
   // Render Grid Items
   function renderItemGrid(items) {
     if (!itemGrid) return;
@@ -855,14 +707,10 @@ async function boot() {
 
     items.forEach((item, idx) => {
       const card = document.createElement("article");
-      const isSelected = (currentCategory === "weapons")
-        ? (activeProjectId === item.id)
-        : (idx === 0);
-      card.className = `pubg-item-card ${item.rarity || 'common'} ${isSelected ? 'selected' : ''}`;
+      card.className = `pubg-item-card ${item.rarity || 'common'} ${idx === 0 ? 'selected' : ''}`;
       card.setAttribute("role", "option");
       card.setAttribute("tabindex", "0");
       card.setAttribute("data-id", item.id);
-      card.setAttribute("aria-label", `${item.name} - ${item.sub}`);
 
       card.innerHTML = `
         <div class="item-card-top">
@@ -876,47 +724,60 @@ async function boot() {
         </div>
       `;
 
-      const handleItemActivate = () => {
+      card.addEventListener("click", () => {
         AudioController.playEquip();
-        if (currentCategory === "weapons") {
-          // If this project is already active and the glass panel is open, toggle it closed
-          if (activeProjectId === item.id && projectGlassPanel?.classList.contains("active")) {
-            closeProjectGlassPanel();
-          } else {
-            selectItem(item, card);
-            openProjectGlassPanel(item);
-          }
-        } else {
-          selectItem(item, card);
-        }
-      };
-
-      card.addEventListener("click", handleItemActivate);
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleItemActivate();
-        }
+        selectItem(item, card);
       });
 
       itemGrid.appendChild(card);
     });
 
-    // Default item handling
+    // Select the first item by default
     if (items.length > 0) {
-      if (currentCategory !== "weapons") {
-        selectItem(items[0], itemGrid.firstElementChild);
-      } else {
-        const targetItem = activeProjectId
-          ? (items.find(i => i.id === activeProjectId) || items[0])
-          : items[0];
-        const targetCard = itemGrid.querySelector(`[data-id="${targetItem.id}"]`);
-        populateDetailDrawer(targetItem);
-        if (activeProjectId && projectGlassPanel?.classList.contains("active")) {
-          targetCard?.classList.add("selected");
-          openProjectGlassPanel(targetItem);
-        }
-      }
+      selectItem(items[0], itemGrid.firstElementChild);
+    }
+  }
+
+  // Select Item and Populate Detail Drawer
+  function selectItem(item, cardEl) {
+    document.querySelectorAll(".pubg-item-card").forEach(c => c.classList.remove("selected"));
+    cardEl?.classList.add("selected");
+
+    if (detailRarityBadge) {
+      detailRarityBadge.textContent = item.rarity?.toUpperCase() || "COMMON";
+      detailRarityBadge.className = `details-rarity-pill ${item.rarity || "rare"}`;
+    }
+    if (detailCatTag) detailCatTag.textContent = item.category || item.tag || currentCategory.toUpperCase();
+    if (detailTitle) detailTitle.textContent = item.name;
+    if (detailTagline) detailTagline.textContent = item.tagline || item.sub;
+    if (detailDesc) detailDesc.textContent = item.desc || "";
+    if (detailPreviewIcon) detailPreviewIcon.textContent = item.icon || "📦";
+    if (detailEquipped) detailEquipped.classList.toggle("visible", cardEl?.classList.contains("selected"));
+
+    if (detailPoints) {
+      detailPoints.innerHTML = (item.details || []).map(pt => `<li>${pt}</li>`).join("");
+    }
+
+    if (detailTechChips) {
+      detailTechChips.innerHTML = (item.tech || []).map(t => `<span class="details-tech-chip">${t}</span>`).join("");
+    }
+
+    const primaryAction = (item.actions || []).find(action => action.primary) || (item.actions || [])[0];
+    if (detailRepoBtn) {
+      const repoUrl = item.repo || (primaryAction && primaryAction.url);
+      detailRepoBtn.href = repoUrl || "#";
+      detailRepoBtn.style.display = repoUrl ? "inline-flex" : "none";
+    }
+    if (detailSecondaryBtn) {
+      const secondaryAction = (item.actions || []).find(action => !action.primary && action.url);
+      detailSecondaryBtn.href = secondaryAction?.url || "#";
+      detailSecondaryBtn.textContent = secondaryAction?.label || "LIVE DEMO ➔";
+      detailSecondaryBtn.style.display = secondaryAction?.url ? "inline-flex" : "none";
+    }
+    if (detailEquipBtn) {
+      detailEquipBtn.textContent = primaryAction?.label || "⚡ EQUIP ITEM";
+      detailEquipBtn.classList.remove("is-equipped");
+      detailEquipBtn.onclick = primaryAction?.callback || null;
     }
   }
 
@@ -959,12 +820,12 @@ async function boot() {
   // PUBG CINEMATIC LOADING CONTROLLER
   // ═══════════════════════════════════════════════════════════
   (function initLoadingScreen() {
-    const overlay  = document.getElementById("pubg-loading-overlay");
-    const pctEl    = document.getElementById("pubg-loading-pct");
-    const fillEl   = document.getElementById("pubg-loading-fill");
-    const buggyEl  = document.getElementById("pubg-buggy");
+    const overlay = document.getElementById("pubg-loading-overlay");
+    const pctEl = document.getElementById("pubg-loading-pct");
+    const fillEl = document.getElementById("pubg-loading-fill");
+    const buggyEl = document.getElementById("pubg-buggy");
     const enterBtn = document.getElementById("enter-button");
-    const toast    = document.getElementById("winner-toast");
+    const toast = document.getElementById("winner-toast");
 
     let start = null;
     const DURATION = 3200;
@@ -1034,13 +895,13 @@ async function boot() {
     const graphCanvas = document.getElementById("neural-graph-canvas");
     if (!drawCanvas || !downCanvas || !graphCanvas) return;
 
-    const drawCtx  = drawCanvas.getContext("2d", { willReadFrequently: true });
-    const downCtx  = downCanvas.getContext("2d");
+    const drawCtx = drawCanvas.getContext("2d", { willReadFrequently: true });
+    const downCtx = downCanvas.getContext("2d");
     const graphCtx = graphCanvas.getContext("2d");
-    const tooltip  = document.getElementById("neural-tooltip");
-    const predValEl   = document.getElementById("neural-pred-val");
+    const tooltip = document.getElementById("neural-tooltip");
+    const predValEl = document.getElementById("neural-pred-val");
     const confBadgeEl = document.getElementById("neural-conf-badge");
-    const probListEl  = document.getElementById("neural-prob-list");
+    const probListEl = document.getElementById("neural-prob-list");
 
     let isDrawing = false, hasDrawn = false, lastX = 0, lastY = 0;
 
@@ -1099,10 +960,10 @@ async function boot() {
               const rBase = (r + kr) * 32 + c;
               const kBase = wBase + kr * 5;
               sum += inPad[rBase] * W1[kBase]
-                   + inPad[rBase + 1] * W1[kBase + 1]
-                   + inPad[rBase + 2] * W1[kBase + 2]
-                   + inPad[rBase + 3] * W1[kBase + 3]
-                   + inPad[rBase + 4] * W1[kBase + 4];
+                + inPad[rBase + 1] * W1[kBase + 1]
+                + inPad[rBase + 2] * W1[kBase + 2]
+                + inPad[rBase + 3] * W1[kBase + 3]
+                + inPad[rBase + 4] * W1[kBase + 4];
             }
             const val = sum > 0 ? sum : 0;
             c1[outRow + c] = val;
@@ -1156,10 +1017,10 @@ async function boot() {
                 const rBase = inFBase + (r + kr) * 18 + c;
                 const kBase = wInFBase + kr * 5;
                 sum += p1Pad[rBase] * W2[kBase]
-                     + p1Pad[rBase + 1] * W2[kBase + 1]
-                     + p1Pad[rBase + 2] * W2[kBase + 2]
-                     + p1Pad[rBase + 3] * W2[kBase + 3]
-                     + p1Pad[rBase + 4] * W2[kBase + 4];
+                  + p1Pad[rBase + 1] * W2[kBase + 1]
+                  + p1Pad[rBase + 2] * W2[kBase + 2]
+                  + p1Pad[rBase + 3] * W2[kBase + 3]
+                  + p1Pad[rBase + 4] * W2[kBase + 4];
               }
             }
             const val = sum > 0 ? sum : 0;
@@ -1321,7 +1182,7 @@ async function boot() {
       if (predValEl) predValEl.textContent = hasDrawn ? top : "?";
       if (confBadgeEl) confBadgeEl.textContent = hasDrawn ? (probs[top] * 100).toFixed(1) + "%" : "0%";
       if (!probListEl) return;
-      probListEl.innerHTML = Array.from({length: 10}, (_, d) => {
+      probListEl.innerHTML = Array.from({ length: 10 }, (_, d) => {
         const pct = (probs[d] * 100).toFixed(1);
         return `
           <div class="prob-row">
@@ -1387,7 +1248,7 @@ async function boot() {
     let nodes = [], conns = [], hovObj = null, pulses = [];
 
     const LAYER_COUNTS = [10, 8, 16, 10];
-    const LAYER_NAMES  = [
+    const LAYER_NAMES = [
       "Input Tensor (28x28)",
       "Conv1 Filters (8 feature maps)",
       "Conv2 Features (16 deep maps)",
@@ -1397,7 +1258,7 @@ async function boot() {
     function setupGraph() {
       const wrap = graphCanvas.parentElement;
       if (!wrap) return;
-      const W = wrap.offsetWidth  || wrap.getBoundingClientRect().width  || 500;
+      const W = wrap.offsetWidth || wrap.getBoundingClientRect().width || 500;
       const H = Math.max(280, wrap.offsetHeight || wrap.getBoundingClientRect().height || 300);
       graphCanvas.width = W; graphCanvas.height = H;
       nodes = []; conns = [];
@@ -1409,8 +1270,8 @@ async function boot() {
           nodes.push({
             id: l === 0 ? `In_Region_${n}`
               : l === 1 ? `Conv1_F${n}`
-              : l === 2 ? `Conv2_F${n}`
-              : `Class_Digit_${n}`,
+                : l === 2 ? `Conv2_F${n}`
+                  : `Class_Digit_${n}`,
             layer: l, index: n,
             x: colX[l], y: stepY * (n + 1),
             radius: l === 3 ? 9 : (l === 2 ? 6.5 : 7),
@@ -1425,8 +1286,8 @@ async function boot() {
           byLayer[l + 1].forEach((dst, j) => {
             const wVal = (!W1) ? 0.2 : (
               l === 0 ? W1[j * 25 + ((i * 2 + 1) % 25)] :
-              l === 1 ? W2[j * 200 + (i % 8) * 25 + 12] :
-                        W3[((i * 16 + 8) % 256) * 10 + j]
+                l === 1 ? W2[j * 200 + (i % 8) * 25 + 12] :
+                  W3[((i * 16 + 8) % 256) * 10 + j]
             );
             conns.push({ src, dst, layer: l, srcIdx: i, dstIdx: j, w: wVal });
           });
@@ -1541,7 +1402,7 @@ async function boot() {
     }
 
     graphCanvas.addEventListener("pointermove", e => {
-      const r  = graphCanvas.getBoundingClientRect();
+      const r = graphCanvas.getBoundingClientRect();
       const mx = e.clientX - r.left, my = e.clientY - r.top;
       hovObj = null;
       for (const n of nodes) if (Math.hypot(n.x - mx, n.y - my) < n.radius + 6) { hovObj = { type: "node", data: n }; break; }
@@ -1550,19 +1411,19 @@ async function boot() {
       if (hovObj && tooltip) {
         tooltip.style.display = "block";
         tooltip.style.left = Math.min(r.width - 240, Math.max(10, mx + 12)) + "px";
-        tooltip.style.top  = Math.min(r.height - 150, Math.max(10, my - 20)) + "px";
+        tooltip.style.top = Math.min(r.height - 150, Math.max(10, my - 20)) + "px";
 
         if (hovObj.type === "node") {
-          const nd  = hovObj.data;
+          const nd = hovObj.data;
           const act = getAct(nd.layer, nd.index);
           const bias = (nd.layer === 1 && B1) ? B1[nd.index]
-                     : (nd.layer === 2 && B2) ? B2[nd.index]
-                     : (nd.layer === 3 && B3) ? B3[nd.index]
-                     : 0;
+            : (nd.layer === 2 && B2) ? B2[nd.index]
+              : (nd.layer === 3 && B3) ? B3[nd.index]
+                : 0;
           const role = nd.layer === 0 ? `Tensor receptive field region ${nd.index}`
-                     : nd.layer === 1 ? `5x5 spatial feature detector (filter ${nd.index})`
-                     : nd.layer === 2 ? `Deep composite representation (map ${nd.index})`
-                     : `Class probability for digit ${nd.index}`;
+            : nd.layer === 1 ? `5x5 spatial feature detector (filter ${nd.index})`
+              : nd.layer === 2 ? `Deep composite representation (map ${nd.index})`
+                : `Class probability for digit ${nd.index}`;
           tooltip.innerHTML = `
             <div style="font-weight:700;color:#79dcff;margin-bottom:4px;">${nd.id}</div>
             <div><b>Layer:</b> ${nd.layerName}</div>
@@ -1600,6 +1461,67 @@ async function boot() {
     requestAnimationFrame(graphLoop);
     setupGraph();
   })();
+}
+
+function initNeuralFabric() {
+  const canvas = document.getElementById("neural-fabric-canvas");
+  if (!canvas || canvas.dataset.ready) return;
+  canvas.dataset.ready = "true";
+
+  const ctx = canvas.getContext("2d");
+  const nodes = Array.from({ length: 42 }, (_, index) => ({
+    x: (index % 14) / 13,
+    y: Math.floor(index / 14) / 2,
+    phase: Math.random() * Math.PI * 2,
+    size: 1.5 + Math.random() * 1.8
+  }));
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    const scale = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.round(rect.width * scale));
+    canvas.height = Math.max(1, Math.round(rect.height * scale));
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  }
+
+  function render(time) {
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    if (!width || !height) return requestAnimationFrame(render);
+    ctx.clearRect(0, 0, width, height);
+    const drift = time * 0.001;
+
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 13; col++) {
+        const a = nodes[row * 14 + col];
+        const b = nodes[row * 14 + col + 1];
+        if (!a || !b) continue;
+        const ax = a.x * width, ay = a.y * height + Math.sin(drift + a.phase) * 7;
+        const bx = b.x * width, by = b.y * height + Math.sin(drift + b.phase) * 7;
+        const glow = 0.11 + (Math.sin(drift * 2 + col * 0.8 + row) + 1) * 0.08;
+        ctx.strokeStyle = `rgba(89, 225, 255, ${glow})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+      }
+    }
+
+    nodes.forEach((node, index) => {
+      const x = node.x * width;
+      const y = node.y * height + Math.sin(drift + node.phase) * 7;
+      const energy = (Math.sin(drift * 2.4 + node.phase) + 1) / 2;
+      ctx.beginPath(); ctx.arc(x, y, node.size + energy * 1.2, 0, Math.PI * 2);
+      ctx.fillStyle = index % 7 === 0 ? "#f2a900" : "#70e8ff";
+      ctx.globalAlpha = 0.35 + energy * 0.65;
+      ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 10;
+      ctx.fill(); ctx.shadowBlur = 0;
+    });
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(render);
+  }
+
+  resize();
+  new ResizeObserver(resize).observe(canvas);
+  requestAnimationFrame(render);
 }
 
 // Boot application when DOM is ready
