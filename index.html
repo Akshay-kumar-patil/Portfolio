@@ -21,6 +21,10 @@
   <div class="pubg-bg-layer" aria-hidden="true"></div>
   <div class="pubg-vignette-layer" aria-hidden="true"></div>
   <div class="pubg-particles-layer" id="pubg-particles" aria-hidden="true"></div>
+  <audio id="lobby-music" loop preload="metadata">
+    <source src="/static/audio/lobby-theme.ogg" type="audio/ogg" />
+  </audio>
+  <button class="music-enable-btn" id="music-enable-btn" type="button" hidden>▶ ENABLE MUSIC</button>
 
   <!-- ═══════════════════════════════════════════════════════════
        PUBG CINEMATIC LOADING SCREEN
@@ -132,8 +136,8 @@
             <span class="player-status-tag"><span class="status-dot"></span> READY</span>
           </div>
           <div class="player-sub-line">
-            <span class="player-rank-badge">ACE DOMINATOR</span>
-            <span class="player-role-badge" id="hud-player-role">AI/ML ENGINEER</span>
+            <span class="player-rank-badge">RAG DEVELOPER</span>
+            <span class="player-role-badge" id="hud-player-role">AI/ML STUDENT</span>
             <span class="player-ping"><span class="ping-dot"></span> 20ms ASIA</span>
           </div>
         </div>
@@ -238,14 +242,13 @@
             </div>
             <span class="slot-action">CONNECT ➔</span>
           </a>
-          <!-- Slot 4: Direct Dispatch -->
-          <button class="squad-slot squad-slot--btn" id="squad-comms-btn" type="button" title="Send Direct Message">
-            <div class="slot-badge">#4</div>
+          <!-- Slot 4: Contact -->
+          <button class="squad-slot squad-slot--btn" id="squad-comms-btn" type="button" title="Contact Akshay">
             <div class="slot-info">
-              <span class="slot-name">DISPATCH HQ</span>
+              <span class="slot-name">CONTACT ME</span>
               <span class="slot-desc">Direct Message / Comms</span>
             </div>
-            <span class="slot-action">CALL ➔</span>
+            <span class="slot-action">MESSAGE ➔</span>
           </button>
         </div>
       </aside>
@@ -265,16 +268,6 @@
 
         <!-- In-Game Mobile Nav Buttons (Center) -->
         <nav class="lobby-center-nav" aria-label="Lobby Navigation">
-          <button class="pubg-nav-btn" id="nav-btn-inventory" type="button" aria-label="Open Inventory Screen">
-            <span class="nav-btn-icon">🎒</span>
-            <span class="nav-btn-title">INVENTORY</span>
-            <span class="nav-btn-sub">LOADOUT</span>
-          </button>
-          <button class="pubg-nav-btn" id="nav-btn-lab" type="button" aria-label="Open Neural Training Lab">
-            <span class="nav-btn-icon">🧠</span>
-            <span class="nav-btn-title">TRAINING LAB</span>
-            <span class="nav-btn-sub">LIVE CNN</span>
-          </button>
           <button class="pubg-nav-btn" id="nav-btn-career" type="button" aria-label="Open Career & Education">
             <span class="nav-btn-icon">📜</span>
             <span class="nav-btn-title">CAREER</span>
@@ -294,17 +287,20 @@
 
         <!-- The Iconic PUBG Matchmaking START Module (Bottom-Right) -->
         <div class="pubg-matchmaking-module">
-          <div class="mode-select-box" id="mode-select-box" role="button" tabindex="0" title="Match Settings">
+          <button class="mode-select-box" id="mode-select-box" type="button" aria-haspopup="dialog" title="Select Map">
             <span class="mode-pill">PORTFOLIO</span>
             <div class="mode-details">
-              <span class="mode-map">CLASSIC // ERANGEL</span>
-              <span class="mode-team">TPP · AI/ML SPEC</span>
+              <span class="mode-map" id="selected-map-label">CLASSIC // ERANGEL</span>
+              <span class="mode-team" id="selected-map-mode">NEURAL NETWORK</span>
             </div>
             <span class="mode-gear-icon">⚙</span>
-          </div>
-          <button class="pubg-start-btn" id="start-inventory-btn" type="button" aria-label="Start Match / Enter Inventory">
+          </button>
+          <button class="pubg-nav-btn lobby-inventory-btn" id="nav-btn-inventory" type="button" aria-label="Open Inventory Screen">
+            <span class="nav-btn-icon">🎒</span><span class="nav-btn-title">INVENTORY</span><span class="nav-btn-sub">LOADOUT</span>
+          </button>
+          <button class="pubg-start-btn" id="start-game-btn" type="button" aria-label="Launch selected interactive map">
             <span class="start-btn-text">START</span>
-            <span class="start-btn-sub">ENTER INVENTORY</span>
+            <span class="start-btn-sub">PLAY MAP</span>
           </button>
         </div>
       </footer>
@@ -474,12 +470,6 @@
               <span class="cat-label">SUPPLY</span>
               <span class="cat-sub">RESUME</span>
             </button>
-            <!-- 7. LAB -->
-            <button class="cat-tab cat-tab--lab" data-cat="lab" type="button" aria-selected="false">
-              <span class="cat-icon">🧠</span>
-              <span class="cat-label">LAB</span>
-              <span class="cat-sub">CNN DEMO</span>
-            </button>
           </nav>
 
         </div>
@@ -580,6 +570,23 @@
     </div>
   </div>
 
+  <!-- Map selection and full-screen game overlays -->
+  <div class="pubg-modal map-selector-modal" id="map-selector-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="map-selector-title">
+    <div class="modal-backdrop" id="map-selector-backdrop"></div>
+    <section class="map-selector-card">
+      <div class="map-selector-heading"><div><span class="toolbar-eyebrow">DEPLOYMENT MAPS</span><h3 id="map-selector-title">SELECT EXPERIENCE</h3></div><button class="map-cancel-btn" id="map-selector-cancel" type="button">CANCEL</button></div>
+      <div class="map-card-grid" role="listbox" aria-label="Interactive map selection">
+        <button class="map-card" type="button" data-map="neural" role="option"><span class="map-card-index">MAP 01</span><span class="map-card-icon">✦</span><strong>NEURAL NETWORK</strong><small>Handwritten digit inference with a live CNN graph.</small><span class="map-card-mode">CLASSIC // ERANGEL</span></button>
+        <button class="map-card" type="button" data-map="fabric" role="option"><span class="map-card-index">MAP 02</span><span class="map-card-icon">⌘</span><strong>FABRIC NEURAL</strong><small>Interactive source-code fabric with pointer-driven physics.</small><span class="map-card-mode">ARCADE // NEURAL FABRIC</span></button>
+      </div>
+      <button class="map-confirm-btn" id="map-selector-confirm" type="button">CONFIRM MAP</button>
+    </section>
+  </div>
+  <div class="pubg-modal game-overlay" id="game-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="game-overlay-title">
+    <div class="game-overlay-glass"></div>
+    <section class="game-overlay-card"><div class="game-overlay-header"><div><span class="toolbar-eyebrow">ACTIVE DEPLOYMENT</span><h3 id="game-overlay-title">NEURAL NETWORK</h3></div></div><div class="game-stage" id="game-stage"></div><button class="back-lobby-btn" id="back-to-lobby-btn" type="button">← BACK TO LOBBY</button></section>
+  </div>
+
   <!-- 2. RESUME MODAL (Embedded PDF Viewer) -->
   <div class="pubg-modal" id="resume-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="resume-title">
     <div class="modal-backdrop" id="resume-backdrop"></div>
@@ -665,12 +672,6 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- Winner Winner Chicken Dinner Toast -->
-  <div id="winner-toast" aria-live="polite" aria-atomic="true">
-    <span class="winner-text">WINNER WINNER CHICKEN DINNER!</span>
-    <span class="winner-sub">#1 AI/ML OPERATOR IN THE DROP ZONE</span>
   </div>
 
   <!-- Scripts -->
