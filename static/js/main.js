@@ -95,6 +95,68 @@ const AudioController = {
   }
 };
 
+/* One persistent music element; actual playback stays browser-policy compliant. */
+const MusicController = {
+  audio: null,
+  muted: localStorage.getItem("portfolio-music-muted") === "true",
+  attempted: false,
+
+  init() {
+    if (this.audio) return;
+    this.audio = document.getElementById("lobby-music");
+    if (!this.audio) return;
+    this.audio.volume = 0.28;
+    this.audio.muted = this.muted;
+    AudioController.muted = this.muted;
+    this.audio.addEventListener("play", () => this.updateUi());
+    this.audio.addEventListener("pause", () => this.updateUi());
+    this.audio.addEventListener("error", () => this.updateUi(true));
+  },
+
+  updateUi(unavailable = false) {
+    const icon = document.getElementById("sfx-icon");
+    const button = document.getElementById("sfx-toggle-btn");
+    const enable = document.getElementById("music-enable-btn");
+    const playing = Boolean(this.audio && !this.audio.paused && !this.audio.muted);
+    if (icon) icon.textContent = this.muted ? "🔇" : (playing ? "🔊" : "▶");
+    if (button) {
+      button.setAttribute("aria-label", this.muted ? "Unmute background music" : (playing ? "Mute background music" : "Play background music"));
+      button.title = button.getAttribute("aria-label");
+    }
+    if (enable) enable.hidden = this.muted || (playing && !unavailable);
+  },
+
+  async play() {
+    this.init();
+    if (!this.audio || this.muted || this.attempted) return;
+    this.attempted = true;
+    try { await this.audio.play(); } catch (_) { this.updateUi(); }
+  },
+
+  async enable() {
+    this.init();
+    if (!this.audio) return;
+    this.muted = false;
+    this.audio.muted = false;
+    AudioController.muted = false;
+    localStorage.setItem("portfolio-music-muted", "false");
+    this.attempted = false;
+    await this.play();
+    this.updateUi();
+  },
+
+  async toggle() {
+    this.init();
+    if (!this.audio) return;
+    if (this.muted || this.audio.paused) return this.enable();
+    this.muted = true;
+    this.audio.muted = true;
+    AudioController.muted = true;
+    localStorage.setItem("portfolio-music-muted", "true");
+    this.updateUi();
+  }
+};
+
 /* ── Interactive 3D Character Drag-to-Rotate ─────────────── */
 function setupCharacterRotator(elementId) {
   const rotator = document.getElementById(elementId);
@@ -162,8 +224,6 @@ async function boot() {
     const hudName = document.getElementById("hud-player-name");
     if (hudName && data.name) hudName.textContent = data.name.toUpperCase();
 
-    const hudRole = document.getElementById("hud-player-role");
-    if (hudRole && data.title) hudRole.textContent = data.title.toUpperCase();
 
     const chatMsg = document.getElementById("lobby-chat-msg");
     if (chatMsg && data.hero?.bio) chatMsg.textContent = data.hero.bio;
@@ -218,27 +278,87 @@ async function boot() {
     showInventory("weapons");
   });
 
-  document.getElementById("start-inventory-btn")?.addEventListener("click", () => {
-    AudioController.playStart();
-    setTimeout(() => showInventory("weapons"), 180);
-  });
-
   document.getElementById("inv-back-lobby-btn")?.addEventListener("click", showLobby);
 
-  // Audio Toggle
+  // Persistent music and audio toggle
+  MusicController.init();
+  MusicController.updateUi();
+  MusicController.play();
+  window.addEventListener("pointerdown", () => { MusicController.attempted = false; MusicController.play(); }, { once: true, passive: true });
   const sfxBtn = document.getElementById("sfx-toggle-btn");
-  const sfxIcon = document.getElementById("sfx-icon");
-  sfxBtn?.addEventListener("click", () => {
-    AudioController.muted = !AudioController.muted;
-    if (sfxIcon) sfxIcon.textContent = AudioController.muted ? "🔇" : "🔊";
-  });
+  sfxBtn?.addEventListener("click", () => MusicController.toggle());
+  document.getElementById("music-enable-btn")?.addEventListener("click", () => MusicController.enable());
 
   // Modal Handlers
   const labModal = document.getElementById("lab-modal");
   const resumeModal = document.getElementById("resume-modal");
   const careerModal = document.getElementById("career-modal");
   const commsModal = document.getElementById("comms-modal");
+  const mapSelectorModal = document.getElementById("map-selector-modal");
+  const gameOverlay = document.getElementById("game-overlay");
+  const gameStage = document.getElementById("game-stage");
+  const labCard = labModal?.querySelector(".lab-card");
+  const neuralGame = document.querySelector(".neural-app-container");
+  const fabricGame = document.querySelector(".neural-fabric-panel");
+  const maps = {
+    neural: { name: "NEURAL NETWORK", label: "CLASSIC // ERANGEL" },
+    fabric: { name: "FABRIC NEURAL", label: "ARCADE // NEURAL FABRIC" }
+  };
+  let selectedMap = localStorage.getItem("portfolio-selected-map") || "neural";
+  let pendingMap = selectedMap;
   initNeuralFabric();
+
+  function updateMapUi() {
+    const map = maps[selectedMap];
+    document.getElementById("selected-map-label").textContent = map.label;
+    document.getElementById("selected-map-mode").textContent = map.name;
+    document.querySelectorAll(".map-card").forEach(card => {
+      const active = card.dataset.map === pendingMap;
+      card.classList.toggle("selected", active);
+      card.setAttribute("aria-selected", String(active));
+    });
+  }
+
+  function openMapSelector() {
+    pendingMap = selectedMap;
+    updateMapUi();
+    openModal(mapSelectorModal);
+  }
+
+  function closeGame() {
+    if (neuralGame && labCard) labCard.append(neuralGame);
+    if (fabricGame && labCard) labCard.append(fabricGame);
+    closeModal(gameOverlay);
+    window.dispatchEvent(new Event("resize"));
+  }
+
+  function launchGame() {
+    const map = maps[selectedMap];
+    if (!map || !gameStage) return;
+    AudioController.playStart();
+    document.getElementById("game-overlay-title").textContent = map.name;
+    gameStage.replaceChildren();
+    gameStage.append(selectedMap === "neural" ? neuralGame : fabricGame);
+    openModal(gameOverlay);
+    setTimeout(() => window.dispatchEvent(new Event("resize")), 80);
+  }
+
+  updateMapUi();
+  document.getElementById("mode-select-box")?.addEventListener("click", openMapSelector);
+  document.getElementById("map-selector-backdrop")?.addEventListener("click", () => closeModal(mapSelectorModal));
+  document.getElementById("map-selector-cancel")?.addEventListener("click", () => closeModal(mapSelectorModal));
+  document.querySelectorAll(".map-card").forEach(card => card.addEventListener("click", () => {
+    pendingMap = card.dataset.map;
+    updateMapUi();
+  }));
+  document.getElementById("map-selector-confirm")?.addEventListener("click", () => {
+    selectedMap = pendingMap;
+    localStorage.setItem("portfolio-selected-map", selectedMap);
+    updateMapUi();
+    closeModal(mapSelectorModal);
+  });
+  document.getElementById("start-game-btn")?.addEventListener("click", launchGame);
+  document.getElementById("back-to-lobby-btn")?.addEventListener("click", closeGame);
 
   function openModal(modal) {
     AudioController.playClick();
@@ -255,7 +375,6 @@ async function boot() {
     modal?.setAttribute("aria-hidden", "true");
   }
 
-  document.getElementById("nav-btn-lab")?.addEventListener("click", () => openModal(labModal));
   document.getElementById("close-lab-btn")?.addEventListener("click", () => closeModal(labModal));
   document.getElementById("lab-backdrop")?.addEventListener("click", () => closeModal(labModal));
 
@@ -278,7 +397,9 @@ async function boot() {
   // Keyboard Shortcuts (ESC, I, M)
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
-      if (labModal?.classList.contains("active")) closeModal(labModal);
+      if (gameOverlay?.classList.contains("active")) closeGame();
+      else if (mapSelectorModal?.classList.contains("active")) closeModal(mapSelectorModal);
+      else if (labModal?.classList.contains("active")) closeModal(labModal);
       else if (resumeModal?.classList.contains("active")) closeModal(resumeModal);
       else if (careerModal?.classList.contains("active")) closeModal(careerModal);
       else if (commsModal?.classList.contains("active")) closeModal(commsModal);
@@ -290,8 +411,7 @@ async function boot() {
       }
     } else if (e.key === "m" || e.key === "M") {
       if (!isDrawingActive()) {
-        if (labModal?.classList.contains("active")) closeModal(labModal);
-        else openModal(labModal);
+        openMapSelector();
       }
     }
   });
@@ -349,10 +469,7 @@ async function boot() {
             ],
             tech: ["Python", "LangChain", "FastAPI", "ChromaDB", "Groq", "LLMs"],
             repo: "https://github.com/Akshay-kumar-patil/healix",
-            actions: [
-              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/healix", primary: true },
-              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/healix" }
-            ]
+            actions: []
           },
           {
             id: "articulate",
@@ -371,10 +488,7 @@ async function boot() {
             ],
             tech: ["Python", "FastAPI", "Whisper", "gTTS", "Gemini API", "WebSockets"],
             repo: "https://github.com/Akshay-kumar-patil/Articulate.AI",
-            actions: [
-              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/Articulate.AI", primary: true },
-              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/Articulate.AI" }
-            ]
+            actions: []
           },
           {
             id: "careerpilot",
@@ -393,10 +507,7 @@ async function boot() {
             ],
             tech: ["Python", "Streamlit", "Scikit-Learn", "FastAPI", "Pandas"],
             repo: "https://github.com/Akshay-kumar-patil/CareerPilot",
-            actions: [
-              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/CareerPilot", primary: true },
-              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/CareerPilot" }
-            ]
+            actions: []
           },
           {
             id: "spendly",
@@ -415,10 +526,7 @@ async function boot() {
             ],
             tech: ["Python", "Gemini API", "Streamlit", "OCR", "Pillow"],
             repo: "https://github.com/Akshay-kumar-patil/SpendlyAI",
-            actions: [
-              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/SpendlyAI", primary: true },
-              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/SpendlyAI" }
-            ]
+            actions: []
           },
           {
             id: "doodling",
@@ -437,10 +545,7 @@ async function boot() {
             ],
             tech: ["FastAPI", "WebSockets", "WebRTC", "Vanilla JS", "Canvas API"],
             repo: "https://github.com/Akshay-kumar-patil/Doodling",
-            actions: [
-              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/Doodling", primary: true },
-              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/Doodling" }
-            ]
+            actions: []
           },
           {
             id: "weather",
@@ -459,10 +564,7 @@ async function boot() {
             ],
             tech: ["Python", "Scikit-Learn", "Streamlit", "Pandas", "Matplotlib"],
             repo: "https://github.com/Akshay-kumar-patil/weather_forecasting_ml_model",
-            actions: [
-              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/weather_forecasting_ml_model", primary: true },
-              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/weather_forecasting_ml_model" }
-            ]
+            actions: []
           },
           {
             id: "rps",
@@ -481,10 +583,7 @@ async function boot() {
             ],
             tech: ["C++", "STL", "OOP", "Data Structures"],
             repo: "https://github.com/Akshay-kumar-patil/R-P-S",
-            actions: [
-              { label: "VIEW REPOSITORY", url: "https://github.com/Akshay-kumar-patil/R-P-S", primary: true },
-              { label: "📁 GITHUB REPO", url: "https://github.com/Akshay-kumar-patil/R-P-S" }
-            ]
+            actions: []
           }
         ];
 
@@ -585,7 +684,7 @@ async function boot() {
             details: (data.competency || []).map(c => `${c.label}: ${c.value}% proficiency`),
             tech: ["Python 80%", "AI/ML 84%", "Backend 82%", "DSA in C++ 75%"],
             actions: [
-              { label: "🧠 LAUNCH LAB", callback: () => openModal(labModal), primary: true }
+              { label: "🧠 LAUNCH LAB", callback: launchGame, primary: true }
             ]
           }
         ];
@@ -657,11 +756,6 @@ async function boot() {
 
   // Switch Category Tab
   function switchCategory(catKey) {
-    if (catKey === "lab") {
-      openModal(labModal);
-      return;
-    }
-
     AudioController.playTab();
     currentCategory = catKey;
 
@@ -775,9 +869,11 @@ async function boot() {
       detailSecondaryBtn.style.display = secondaryAction?.url ? "inline-flex" : "none";
     }
     if (detailEquipBtn) {
+      const isProject = Boolean(item.repo);
+      detailEquipBtn.style.display = isProject ? "none" : "inline-flex";
       detailEquipBtn.textContent = primaryAction?.label || "⚡ EQUIP ITEM";
       detailEquipBtn.classList.remove("is-equipped");
-      detailEquipBtn.onclick = primaryAction?.callback || null;
+      detailEquipBtn.onclick = isProject ? null : (primaryAction?.callback || null);
     }
   }
 
@@ -825,7 +921,6 @@ async function boot() {
     const fillEl = document.getElementById("pubg-loading-fill");
     const buggyEl = document.getElementById("pubg-buggy");
     const enterBtn = document.getElementById("enter-button");
-    const toast = document.getElementById("winner-toast");
 
     let start = null;
     const DURATION = 3200;
@@ -866,12 +961,6 @@ async function boot() {
         overlay.classList.add("hide");
         setTimeout(() => { overlay.style.display = "none"; }, 800);
       }
-      setTimeout(() => {
-        if (toast) {
-          toast.classList.add("show");
-          setTimeout(() => toast.classList.remove("show"), 3500);
-        }
-      }, 2000);
     }
 
     if (enterBtn) {
@@ -1467,61 +1556,14 @@ function initNeuralFabric() {
   const canvas = document.getElementById("neural-fabric-canvas");
   if (!canvas || canvas.dataset.ready) return;
   canvas.dataset.ready = "true";
-
   const ctx = canvas.getContext("2d");
-  const nodes = Array.from({ length: 42 }, (_, index) => ({
-    x: (index % 14) / 13,
-    y: Math.floor(index / 14) / 2,
-    phase: Math.random() * Math.PI * 2,
-    size: 1.5 + Math.random() * 1.8
-  }));
-
-  function resize() {
-    const rect = canvas.getBoundingClientRect();
-    const scale = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.max(1, Math.round(rect.width * scale));
-    canvas.height = Math.max(1, Math.round(rect.height * scale));
-    ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  }
-
-  function render(time) {
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    if (!width || !height) return requestAnimationFrame(render);
-    ctx.clearRect(0, 0, width, height);
-    const drift = time * 0.001;
-
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 13; col++) {
-        const a = nodes[row * 14 + col];
-        const b = nodes[row * 14 + col + 1];
-        if (!a || !b) continue;
-        const ax = a.x * width, ay = a.y * height + Math.sin(drift + a.phase) * 7;
-        const bx = b.x * width, by = b.y * height + Math.sin(drift + b.phase) * 7;
-        const glow = 0.11 + (Math.sin(drift * 2 + col * 0.8 + row) + 1) * 0.08;
-        ctx.strokeStyle = `rgba(89, 225, 255, ${glow})`;
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
-      }
-    }
-
-    nodes.forEach((node, index) => {
-      const x = node.x * width;
-      const y = node.y * height + Math.sin(drift + node.phase) * 7;
-      const energy = (Math.sin(drift * 2.4 + node.phase) + 1) / 2;
-      ctx.beginPath(); ctx.arc(x, y, node.size + energy * 1.2, 0, Math.PI * 2);
-      ctx.fillStyle = index % 7 === 0 ? "#f2a900" : "#70e8ff";
-      ctx.globalAlpha = 0.35 + energy * 0.65;
-      ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 10;
-      ctx.fill(); ctx.shadowBlur = 0;
-    });
-    ctx.globalAlpha = 1;
-    requestAnimationFrame(render);
-  }
-
-  resize();
-  new ResizeObserver(resize).observe(canvas);
-  requestAnimationFrame(render);
+  const chars = ["const", "let", "function", "return", "async", "await", "AI", "ML", "node", "fabric", "{", "}", "=>", "01"];
+  let cols = 18, rows = 9, grid = [], dragging = false;
+  const mouse = { x: -9999, y: -9999, px: -9999, py: -9999 };
+  function resize() { const rect = canvas.getBoundingClientRect(); canvas.width = Math.max(1, Math.floor(rect.width)); canvas.height = Math.max(1, Math.floor(rect.height)); cols = Math.max(12, Math.floor(canvas.width / 46)); rows = Math.max(6, Math.floor(canvas.height / 36)); grid = Array.from({ length: cols * rows }, (_, i) => { const row = Math.floor(i / cols), col = i % cols, x = col * canvas.width / (cols - 1), y = row * canvas.height / (rows - 1); return { baseX:x, baseY:y, x, y, vx:0, vy:0, row, col, char:chars[i % chars.length] }; }); }
+  function animate(time) { const breeze = time * .001, vx = mouse.x - mouse.px, vy = mouse.y - mouse.py; mouse.px = mouse.x; mouse.py = mouse.y; ctx.fillStyle = "#050811"; ctx.fillRect(0,0,canvas.width,canvas.height); grid.forEach(node => { const tx = node.baseX + Math.sin(breeze * 1.5 + node.row*.4)*5*node.row/rows, ty = node.baseY + Math.cos(breeze + node.col*.3)*2, dx = node.x-mouse.x, dy = node.y-mouse.y, d2 = dx*dx+dy*dy; if (d2 < 19600 && d2 > 0) { const power=(1-Math.sqrt(d2)/140)*(dragging?7:3.5); node.vx += dx/Math.sqrt(d2)*power + vx*power*.08; node.vy += dy/Math.sqrt(d2)*power + vy*power*.08; } node.vx=(node.vx+(tx-node.x)*.05)*.85; node.vy=(node.vy+(ty-node.y)*.05)*.85; node.x+=node.vx; node.y+=node.vy; }); ctx.beginPath(); ctx.strokeStyle="rgba(92,150,235,.14)"; ctx.lineWidth=.8; grid.forEach((node,i) => { if(node.col<cols-1){const next=grid[i+1];ctx.moveTo(node.x,node.y);ctx.lineTo(next.x,next.y);} if(node.row<rows-1){const next=grid[i+cols];ctx.moveTo(node.x,node.y);ctx.lineTo(next.x,next.y);} }); ctx.stroke(); ctx.font="12px Share Tech Mono, monospace";ctx.textAlign="center";ctx.textBaseline="middle";grid.forEach((node,i)=>{ctx.fillStyle=i%9===0?"rgba(255,190,90,.9)":"rgba(150,205,255,.48)";ctx.fillText(node.char,node.x,node.y);});requestAnimationFrame(animate); }
+  function point(event) { const rect=canvas.getBoundingClientRect(); mouse.x=event.clientX-rect.left; mouse.y=event.clientY-rect.top; }
+  canvas.addEventListener("pointerdown", event => { dragging=true; point(event); mouse.px=mouse.x; mouse.py=mouse.y; }); canvas.addEventListener("pointermove", point); canvas.addEventListener("pointerleave", () => { if (!dragging) mouse.x=mouse.y=-9999; }); window.addEventListener("pointerup", () => { dragging=false; }); new ResizeObserver(resize).observe(canvas); resize(); requestAnimationFrame(animate);
 }
 
 // Boot application when DOM is ready
