@@ -95,65 +95,33 @@ const AudioController = {
   }
 };
 
-/* One persistent music element; actual playback stays browser-policy compliant. */
-const MusicController = {
-  audio: null,
-  muted: localStorage.getItem("portfolio-music-muted") === "true",
-  attempted: false,
+/* ── Tactical Sound Effects Controller ─────────────────────── */
+const TacticalAudio = {
+  muted: localStorage.getItem("portfolio-sfx-muted") === "true",
 
   init() {
-    if (this.audio) return;
-    this.audio = document.getElementById("lobby-music");
-    if (!this.audio) return;
-    this.audio.volume = 0.28;
-    this.audio.muted = this.muted;
     AudioController.muted = this.muted;
-    this.audio.addEventListener("play", () => this.updateUi());
-    this.audio.addEventListener("pause", () => this.updateUi());
-    this.audio.addEventListener("error", () => this.updateUi(true));
+    this.updateUi();
   },
 
-  updateUi(unavailable = false) {
-    const icon = document.getElementById("sfx-icon");
-    const button = document.getElementById("sfx-toggle-btn");
-    const enable = document.getElementById("music-enable-btn");
-    const playing = Boolean(this.audio && !this.audio.paused && !this.audio.muted);
-    if (icon) icon.textContent = this.muted ? "🔇" : (playing ? "🔊" : "▶");
-    if (button) {
-      button.setAttribute("aria-label", this.muted ? "Unmute background music" : (playing ? "Mute background music" : "Play background music"));
+  updateUi() {
+    document.querySelectorAll("#sfx-icon, .sfx-icon").forEach(icon => {
+      icon.textContent = this.muted ? "🔇" : "🔊";
+    });
+    document.querySelectorAll(".sfx-btn").forEach(button => {
+      button.setAttribute("aria-label", this.muted ? "Unmute tactical sound effects" : "Mute tactical sound effects");
       button.title = button.getAttribute("aria-label");
+    });
+  },
+
+  toggle() {
+    this.muted = !this.muted;
+    AudioController.muted = this.muted;
+    localStorage.setItem("portfolio-sfx-muted", String(this.muted));
+    this.updateUi();
+    if (!this.muted) {
+      AudioController.playClick();
     }
-    if (enable) enable.hidden = this.muted || (playing && !unavailable);
-  },
-
-  async play() {
-    this.init();
-    if (!this.audio || this.muted || this.attempted) return;
-    this.attempted = true;
-    try { await this.audio.play(); } catch (_) { this.updateUi(); }
-  },
-
-  async enable() {
-    this.init();
-    if (!this.audio) return;
-    this.muted = false;
-    this.audio.muted = false;
-    AudioController.muted = false;
-    localStorage.setItem("portfolio-music-muted", "false");
-    this.attempted = false;
-    await this.play();
-    this.updateUi();
-  },
-
-  async toggle() {
-    this.init();
-    if (!this.audio) return;
-    if (this.muted || this.audio.paused) return this.enable();
-    this.muted = true;
-    this.audio.muted = true;
-    AudioController.muted = true;
-    localStorage.setItem("portfolio-music-muted", "true");
-    this.updateUi();
   }
 };
 
@@ -258,15 +226,22 @@ async function boot() {
   const screenLobby = document.getElementById("screen-lobby");
   const screenInventory = document.getElementById("screen-inventory");
 
+  const appShell = document.getElementById("pubg-app-shell");
+  const topHud = document.getElementById("pubg-top-hud");
+
   function showLobby() {
     AudioController.playClick();
     if (screenInventory) screenInventory.classList.remove("active");
     if (screenLobby) screenLobby.classList.add("active");
+    appShell?.classList.remove("in-inventory");
+    if (topHud) topHud.style.display = "";
   }
 
   function showInventory(targetCategory = null) {
     if (screenLobby) screenLobby.classList.remove("active");
     if (screenInventory) screenInventory.classList.add("active");
+    appShell?.classList.add("in-inventory");
+    if (topHud) topHud.style.display = "none";
     if (targetCategory) {
       switchCategory(targetCategory);
     }
@@ -280,14 +255,19 @@ async function boot() {
 
   document.getElementById("inv-back-lobby-btn")?.addEventListener("click", showLobby);
 
-  // Persistent music and audio toggle
-  MusicController.init();
-  MusicController.updateUi();
-  MusicController.play();
-  window.addEventListener("pointerdown", () => { MusicController.attempted = false; MusicController.play(); }, { once: true, passive: true });
-  const sfxBtn = document.getElementById("sfx-toggle-btn");
-  sfxBtn?.addEventListener("click", () => MusicController.toggle());
-  document.getElementById("music-enable-btn")?.addEventListener("click", () => MusicController.enable());
+  // Tactical SFX audio toggle
+  TacticalAudio.init();
+  document.querySelectorAll(".sfx-btn").forEach(btn => {
+    btn.addEventListener("click", () => TacticalAudio.toggle());
+  });
+
+  // Inventory details mobile close/minimize handler
+  const detailCloseBtn = document.getElementById("details-close-btn");
+  const detailsPanel = document.getElementById("inv-details-panel");
+  detailCloseBtn?.addEventListener("click", () => {
+    AudioController.playClick();
+    detailsPanel?.classList.add("minimized");
+  });
 
   // Modal Handlers
   const labModal = document.getElementById("lab-modal");
@@ -836,6 +816,7 @@ async function boot() {
   function selectItem(item, cardEl) {
     document.querySelectorAll(".pubg-item-card").forEach(c => c.classList.remove("selected"));
     cardEl?.classList.add("selected");
+    document.getElementById("inv-details-panel")?.classList.remove("minimized");
 
     if (detailRarityBadge) {
       detailRarityBadge.textContent = item.rarity?.toUpperCase() || "COMMON";
