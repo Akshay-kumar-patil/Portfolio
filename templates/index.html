@@ -21,10 +21,6 @@
   <div class="pubg-bg-layer" aria-hidden="true"></div>
   <div class="pubg-vignette-layer" aria-hidden="true"></div>
   <div class="pubg-particles-layer" id="pubg-particles" aria-hidden="true"></div>
-  <audio id="lobby-music" loop preload="metadata">
-    <source src="/static/audio/lobby-theme.ogg" type="audio/ogg" />
-  </audio>
-  <button class="music-enable-btn" id="music-enable-btn" type="button" hidden>▶ ENABLE MUSIC</button>
 
   <!-- ═══════════════════════════════════════════════════════════
        PUBG CINEMATIC LOADING SCREEN
@@ -320,12 +316,15 @@
           <span class="back-text">LOBBY</span>
         </button>
         <div class="inv-title-group">
-          <h2 class="inv-title">CHARACTER LOADOUT &amp; INVENTORY</h2>
-          <span class="inv-subtitle">CUSTOMIZATION BAY // LEVEL 75 OPERATOR GEAR</span>
+          <h2 class="inv-title">LOADOUT &amp; INVENTORY</h2>
         </div>
-        <div class="inv-quick-stats">
-          <span class="stat-pill"><span class="stat-k">CAPACITY</span> 100%</span>
-          <span class="stat-pill"><span class="stat-k">STATUS</span> EQUIPPED</span>
+        <div class="inv-topbar-right">
+          <div class="inv-quick-stats">
+            <span class="stat-pill"><span class="stat-k">CAPACITY</span> 100%</span>
+          </div>
+          <button class="pubg-hud-btn sfx-btn" id="sfx-toggle-btn-inv" type="button" aria-label="Toggle tactical audio" title="Audio Toggle">
+            <span class="sfx-icon">🔊</span>
+          </button>
         </div>
       </div>
 
@@ -372,7 +371,10 @@
                 <span class="details-category-tag" id="details-category-tag">WEAPONS // PROJECT</span>
                 <span class="details-rarity-pill" id="details-rarity-pill">MYTHIC</span>
               </div>
-              <span class="details-equipped-indicator" id="details-equipped-indicator">EQUIPPED</span>
+              <div class="details-header-right">
+                <span class="details-equipped-indicator" id="details-equipped-indicator">EQUIPPED</span>
+                <button class="details-close-btn" id="details-close-btn" type="button" aria-label="Minimize details panel" title="Minimize details">✕</button>
+              </div>
             </div>
 
             <div class="details-title-block">
